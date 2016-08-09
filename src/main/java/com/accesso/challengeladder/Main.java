@@ -5,6 +5,7 @@ import java.sql.SQLException;
 
 import org.apache.log4j.Logger;
 
+import com.accesso.challengeladder.controller.RankingController;
 import com.accesso.challengeladder.controller.RankingHistoryController;
 import com.accesso.challengeladder.controller.UserController;
 import com.accesso.challengeladder.utils.CorsFilters;
@@ -22,6 +23,8 @@ public class Main
 		CorsFilters.apply();
 
 		new UserController();
+
+		new RankingController();
 
 		new RankingHistoryController();
 
