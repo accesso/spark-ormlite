@@ -7,7 +7,6 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import com.accesso.challengeladder.model.Ranking;
-import com.accesso.challengeladder.model.User;
 import com.accesso.challengeladder.utils.DBHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
@@ -18,7 +17,7 @@ public class RankingService
 	private static final Logger logger = Logger.getLogger(RankingService.class.getCanonicalName());
 
 	private ConnectionSource connectionSource;
-	private Dao<User, String> rankingDao;
+	private Dao<Ranking, String> rankingDao;
 
 	public RankingService() throws SQLException, IOException
 	{
@@ -29,7 +28,7 @@ public class RankingService
 		rankingDao = DaoManager.createDao(this.connectionSource, Ranking.class);
 	}
 
-	public List<User> getRanking() throws SQLException
+	public List<Ranking> getRanking() throws SQLException
 	{
 		List<Ranking> rankList = rankingDao.queryForAll();
 		return rankList;
