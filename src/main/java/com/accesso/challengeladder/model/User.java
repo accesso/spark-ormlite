@@ -1,65 +1,100 @@
 package com.accesso.challengeladder.model;
 
-import java.util.Date;
-
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
-@DatabaseTable(tableName = "users")
-public class User {
+@DatabaseTable(tableName = "user")
+public class User
+{
 
 	@DatabaseField(generatedId = true)
 	private int id;
 
 	@DatabaseField
-	private String username;
+	private String name;
+
+	@DatabaseField
+	private String password;
+
+	@DatabaseField
+	private String salt;
 
 	@DatabaseField
 	private String email;
 
-	@DatabaseField(columnName = "created_at")
-	private Date createdAt;
+	@DatabaseField(columnName = "admin_flag")
+	private String adminFlag;
 
-	@DatabaseField(columnName = "updated_at")
-	private Date updatedAt;
+	@DatabaseField(columnName = "active_flag")
+	private String activeFlag;
 
-	public User() {
+	public User()
+	{
 		// ORMLite needs a no-arg constructor
 	}
 
-	public int getId() {
+	public int getId()
+	{
 		return this.id;
 	}
 
-	public String getUsername() {
-		return this.username;
+	public String getName()
+	{
+		return name;
 	}
 
-	public void setUsername(String username) {
-		this.username = username;
+	public String getPassword()
+	{
+		return password;
 	}
 
-	public String getEmail() {
+	public String getSalt()
+	{
+		return salt;
+	}
+
+	public String getEmail()
+	{
 		return email;
 	}
 
-	public void setEmail(String email) {
+	public String getAdminFlag()
+	{
+		return adminFlag;
+	}
+
+	public String getActiveFlag()
+	{
+		return activeFlag;
+	}
+
+	public void setName(String name)
+	{
+		this.name = name;
+	}
+
+	public void setPassword(String password)
+	{
+		this.password = password;
+	}
+
+	public void setSalt(String salt)
+	{
+		this.salt = salt;
+	}
+
+	public void setEmail(String email)
+	{
 		this.email = email;
 	}
 
-	public Date getCreatedAt() {
-		return createdAt;
+	public void setAdminFlag(String adminFlag)
+	{
+		this.adminFlag = adminFlag;
 	}
 
-	public Date getUpdatedAt() {
-		return updatedAt;
-	}
-
-	public void setCreatedAt(Date createdAt) {
-		this.createdAt = createdAt;
-	}
-
-	public void setUpdatedAt(Date updatedAt) {
-		this.updatedAt = updatedAt;
+	public void setActiveFlag(String activeFlag)
+	{
+		this.activeFlag = activeFlag;
 	}
 }
