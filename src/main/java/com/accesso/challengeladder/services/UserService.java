@@ -57,7 +57,7 @@ public class UserService {
 	}
 
 	public List<User> getAllUsers() throws SQLException {
-		List<User> userList = userDao.queryForAll();
-		return userList;
-	}
+        List<User> userList = userDao.queryForAll();
+        return userList;
+    }
 }
