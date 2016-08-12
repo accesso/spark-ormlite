@@ -21,53 +21,51 @@ import com.google.gson.Gson;
 
 public class MatchController
 {
-	public MatchController() throws SQLException, IOException
-	{
-		MatchService matchService = new MatchService();
+    public MatchController() throws SQLException, IOException
+    {
+        MatchService matchService = new MatchService();
 
-		get("/matches", (req, res) -> {
-			List<Match> rankings = matchService.getAllMatches();
-			return JsonUtil.toJson(rankings);
-		});
+        get("/matches", (req, res) -> {
+            List<Match> rankings = matchService.getAllMatches();
+            return JsonUtil.toJson(rankings);
+        });
 
-		// get information about a match
-		get("/matches/:id", (req, res) -> {
-			return JsonUtil.toJson(matchService.getMatch(req.params(":id")));
-		});
+        // get information about a match
+        get("/matches/:id", (req, res) -> {
+            return JsonUtil.toJson(matchService.getMatch(req.params(":id")));
+        });
 
-		// get all users in a match
-		get("/matches/:id/users", (req, res) -> {
-			return JsonUtil.toJson(matchService.getMatchUsers(req.params(":id")));
-		});
+        // get all users in a match
+        get("/matches/:id/users", (req, res) -> {
+            return JsonUtil.toJson(matchService.getMatchUsers(req.params(":id")));
+        });
 
-		post(
-				"/matches",
-				(req, res) -> {
-					PostMatchesRequest postMatchesRequest = new Gson().fromJson(req.body(), PostMatchesRequest.class);
-					postMatchesRequest.getCreatorUserId();
-					postMatchesRequest.getOponentUserId();
+        post("/matches",
+                (req, res) -> {
+                    PostMatchesRequest postMatchesRequest = new Gson().fromJson(req.body(), PostMatchesRequest.class);
+                    postMatchesRequest.getCreatorUserId();
+                    postMatchesRequest.getOponentUserId();
 
-					Match match = matchService.createMatch(postMatchesRequest.getCreatorUserId(),
-							new ArrayList<Integer>(Arrays.asList(postMatchesRequest.getOponentUserId())));
+                    Match match = matchService.createMatch(postMatchesRequest.getCreatorUserId(),
+                            new ArrayList<Integer>(Arrays.asList(postMatchesRequest.getOponentUserId())));
 
-					if (match == null)
-					{
-						res.status(HttpStatus.INTERNAL_SERVER_ERROR_500);
-						return "Error creating match";
-					}
-					else
-					{
-						return JsonUtil.toJson(match);
-					}
-				});
+                    if (match == null)
+                    {
+                        res.status(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                        return "Error creating match";
+                    }
+                    else
+                    {
+                        return JsonUtil.toJson(match);
+                    }
+                });
 
-		// TODO params are passed as a json string in the body entity
-		put("/matches/:id",
-				(req, res) -> {
-					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-					return JsonUtil.toJson(matchService.updateMatch(req.queryParams("matchId"), req.queryParams("victorId"),
-							sdf.parse(req.queryParams("matchTimestamp")), req.queryParams("status"), sdf.parse(req.queryParams("creationTimestamp")),
-							req.queryParams("creatorId")));
-				});
-	}
+        // TODO params are passed as a json string in the body entity
+        put("/matches/:id", (req, res) -> {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            return JsonUtil.toJson(matchService.updateMatch(req.queryParams("matchId"), req.queryParams("victorId"),
+                    sdf.parse(req.queryParams("matchTimestamp")), req.queryParams("status"), sdf.parse(req.queryParams("creationTimestamp")),
+                    req.queryParams("creatorId")));
+        });
+    }
 }
