@@ -7,11 +7,17 @@ import static spark.Spark.put;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.eclipse.jetty.http.HttpStatus;
+
 import com.accesso.challengeladder.model.Match;
+import com.accesso.challengeladder.requests.PostMatchesRequest;
 import com.accesso.challengeladder.services.MatchService;
 import com.accesso.challengeladder.utils.JsonUtil;
+import com.google.gson.Gson;
 
 public class MatchController
 {
@@ -34,11 +40,26 @@ public class MatchController
 			return JsonUtil.toJson(matchService.getMatchUsers(req.params(":id")));
 		});
 
-		// TODO create match functionality
-		post("/matches", (req, res) -> {
+		post(
+				"/matches",
+				(req, res) -> {
+					PostMatchesRequest postMatchesRequest = new Gson().fromJson(req.body(), PostMatchesRequest.class);
+					postMatchesRequest.getCreatorUserId();
+					postMatchesRequest.getOponentUserId();
 
-			return null;
-		});
+					Match match = matchService.createMatch(postMatchesRequest.getCreatorUserId(),
+							new ArrayList<Integer>(Arrays.asList(postMatchesRequest.getOponentUserId())));
+
+					if (match == null)
+					{
+						res.status(HttpStatus.INTERNAL_SERVER_ERROR_500);
+						return "Error creating match";
+					}
+					else
+					{
+						return JsonUtil.toJson(match);
+					}
+				});
 
 		// TODO params are passed as a json string in the body entity
 		put("/matches/:id",

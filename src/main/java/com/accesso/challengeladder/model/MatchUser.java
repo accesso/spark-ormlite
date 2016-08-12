@@ -17,7 +17,7 @@ public class MatchUser
 	private User user;
 
 	@DatabaseField
-	private int score;
+	private Integer score;
 
 	public MatchUser()
 	{
@@ -39,7 +39,7 @@ public class MatchUser
 		this.user = user;
 	}
 
-	public int getScore()
+	public Integer getScore()
 	{
 		return score;
 	}
@@ -54,7 +54,7 @@ public class MatchUser
 		this.match = match;
 	}
 
-	public void setScore(int score)
+	public void setScore(Integer score)
 	{
 		this.score = score;
 	}

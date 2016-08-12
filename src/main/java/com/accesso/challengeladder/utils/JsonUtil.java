@@ -3,7 +3,6 @@ package com.accesso.challengeladder.utils;
 import spark.ResponseTransformer;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 
 public class JsonUtil
 {
@@ -16,11 +15,5 @@ public class JsonUtil
 	public static ResponseTransformer json()
 	{
 		return JsonUtil::toJson;
-
-	}
-
-	public static <T> T fromJson(JsonElement json, Class<T> classIn)
-	{
-		return new Gson().fromJson(json, classIn);
 	}
 }
