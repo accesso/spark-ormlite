@@ -14,10 +14,10 @@ public class User
 	private String name;
 
 	@DatabaseField
-	private String password;
+	private transient String password;
 
 	@DatabaseField
-	private String salt;
+	private transient String salt;
 
 	@DatabaseField
 	private String email;
@@ -28,19 +28,19 @@ public class User
 	@DatabaseField(columnName = "active_flag")
 	private String activeFlag;
 
-    private int numWins;
+	private int numWins;
 
-    private int numLosses;
+	private int numLosses;
 
 	public User()
 	{
 		// ORMLite needs a no-arg constructor
 	}
 
-    public User(int id)
-    {
-        this.id = id;
-    }
+	public User(int id)
+	{
+		this.id = id;
+	}
 
 	public int getId()
 	{
@@ -107,23 +107,23 @@ public class User
 		this.activeFlag = activeFlag;
 	}
 
-    public int getNumLosses()
-    {
-        return numLosses;
-    }
+	public int getNumLosses()
+	{
+		return numLosses;
+	}
 
-    public void setNumLosses(int numLosses)
-    {
-        this.numLosses = numLosses;
-    }
+	public void setNumLosses(int numLosses)
+	{
+		this.numLosses = numLosses;
+	}
 
-    public int getNumWins()
-    {
-        return numWins;
-    }
+	public int getNumWins()
+	{
+		return numWins;
+	}
 
-    public void setNumWins(int numWins)
-    {
-        this.numWins = numWins;
-    }
+	public void setNumWins(int numWins)
+	{
+		this.numWins = numWins;
+	}
 }
