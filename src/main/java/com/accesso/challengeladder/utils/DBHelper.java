@@ -20,11 +20,6 @@ public class DBHelper
 		Properties prop = new Properties();
 		prop.load(DBHelper.class.getClassLoader().getResourceAsStream("db.properties"));
 
-		// TODO - fix these later
-		// this.databaseUrl = "jdbc:mysql://192.168.2.246/accesso_table_tennis";
-		// this.userDb = "dba";
-		// this.passDb = "sql";
-
 		this.databaseUrl = prop.getProperty("db.url");
 		this.userDb = prop.getProperty("db.user");
 		this.passDb = prop.getProperty("db.password");
