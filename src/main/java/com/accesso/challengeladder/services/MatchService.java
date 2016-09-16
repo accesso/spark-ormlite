@@ -6,12 +6,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.accesso.challengeladder.model.*;
 import org.apache.log4j.Logger;
 
-import com.accesso.challengeladder.model.Match;
-import com.accesso.challengeladder.model.MatchStatus;
-import com.accesso.challengeladder.model.MatchUser;
-import com.accesso.challengeladder.model.User;
 import com.accesso.challengeladder.utils.Constants;
 import com.accesso.challengeladder.utils.DBHelper;
 import com.j256.ormlite.dao.Dao;
@@ -70,6 +67,46 @@ public class MatchService
             return null;
         }
         return response;
+    }
+
+    public List<MatchUser> getMatchUsersByUser(String userId)
+    {
+
+        List<MatchUser> response;
+        try
+        {
+            response = matchUserDao.queryForEq("user_id", userId);
+        }
+        catch (SQLException sqle)
+        {
+            logger.error(sqle);
+            return null;
+        }
+        return response;
+    }
+
+    public MatchDetails getMatchDetails(String matchId) throws SQLException
+    {
+        List<MatchUser> matchUserList = getMatchUsers(matchId);
+        Match match = getMatch(matchId);
+        MatchDetails response = new MatchDetails();
+        response.setMatch(match);
+        response.setMatchUserList(matchUserList);
+        return response;
+    }
+
+    public List<MatchDetails> getMatchDetailsForUser(String userId) throws SQLException
+    {
+        List<MatchDetails> matchDetailsList = new ArrayList<>();
+        List<MatchUser> matchUserList = getMatchUsersByUser(userId);
+        MatchDetails matchDetails;
+        for(MatchUser matchUser : matchUserList)
+        {
+            String matchId = Integer.toString(matchUser.getMatch().getId());
+            matchDetails = getMatchDetails(matchId);
+            matchDetailsList.add(matchDetails);
+        }
+        return matchDetailsList;
     }
 
     public Match createMatch(Integer creatorUserId, List<Integer> userIds)

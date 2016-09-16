@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import com.accesso.challengeladder.controller.EmailController;
 import com.accesso.challengeladder.controller.LoginController;
 import com.accesso.challengeladder.controller.MatchController;
+import com.accesso.challengeladder.controller.MatchDetailsController;
 import com.accesso.challengeladder.controller.RankingController;
 import com.accesso.challengeladder.controller.RankingHistoryController;
 import com.accesso.challengeladder.controller.UserController;
@@ -30,6 +31,8 @@ public class Main
         new LoginController();
 
         new MatchController();
+
+        new MatchDetailsController();
 
 		new RankingController();
 
