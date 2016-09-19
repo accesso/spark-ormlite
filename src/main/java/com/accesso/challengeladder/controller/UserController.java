@@ -42,7 +42,6 @@ public class UserController
 
         get("/users/:id", (req, res) -> {
             User user = userService.getUser(req.params(":id"));
-            // User user = userService.getMaskedUser(req.params(":id"));
                 if (user == null)
                 {
                     res.status(HttpStatus.NOT_FOUND_404);

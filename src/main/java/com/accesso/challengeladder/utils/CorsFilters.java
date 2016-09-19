@@ -17,7 +17,7 @@ public class CorsFilters {
 	}
 
 	public final static void apply() {
-		Spark.after((request, response) ->
+		Spark.before((request, response) ->
                 corsHeaders.forEach(response::header)
         );
 
@@ -36,9 +36,6 @@ public class CorsFilters {
             return "OK";
         });
 
-        //Spark.before((request,response)->{
-        //        response.header("Access-Control-Allow-Origin", "*");
-        //});
     }
 
 
