@@ -6,9 +6,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.accesso.challengeladder.model.*;
 import org.apache.log4j.Logger;
 
+import com.accesso.challengeladder.model.Match;
+import com.accesso.challengeladder.model.MatchDetails;
+import com.accesso.challengeladder.model.MatchStatus;
+import com.accesso.challengeladder.model.MatchUser;
+import com.accesso.challengeladder.model.User;
 import com.accesso.challengeladder.utils.Constants;
 import com.accesso.challengeladder.utils.DBHelper;
 import com.j256.ormlite.dao.Dao;
@@ -100,7 +104,7 @@ public class MatchService
         List<MatchDetails> matchDetailsList = new ArrayList<>();
         List<MatchUser> matchUserList = getMatchUsersByUser(userId);
         MatchDetails matchDetails;
-        for(MatchUser matchUser : matchUserList)
+        for (MatchUser matchUser : matchUserList)
         {
             String matchId = Integer.toString(matchUser.getMatch().getId());
             matchDetails = getMatchDetails(matchId);
@@ -109,9 +113,8 @@ public class MatchService
         return matchDetailsList;
     }
 
-    public Match createMatch(Integer creatorUserId, List<Integer> userIds)
+    public Match createMatch(Integer creatorUserId, Integer opponentUserId)
     {
-
         // create an entry in the match table first to get an id
         Match newMatch = new Match();
 
@@ -120,23 +123,9 @@ public class MatchService
         try
         {
             newMatch.setCreatorUser(userDao.queryForId(creatorUserId.toString()));
+            newMatch.setOpponentUser(userDao.queryForId(opponentUserId.toString()));
             newMatch.setMatchStatus(matchStatusDao.queryForId(Constants.MATCH_STATUS_PENDING));
             matchDao.create(newMatch);
-
-            if (!userIds.contains(creatorUserId))
-            {
-                userIds.add(creatorUserId);
-            }
-            // iterate over users, write an entry to match_user for each
-            for (Integer userId : userIds)
-            {
-                MatchUser tempMatchUser = createMatchUser(userId.toString(), Integer.toString(newMatch.getId()));
-                if (tempMatchUser == null)
-                {
-                    logger.error("Unable to create a MatchUser for userId " + userId);
-                    return null;
-                }
-            }
         }
         catch (SQLException sqle)
         {
@@ -146,83 +135,43 @@ public class MatchService
         return newMatch;
     }
 
-    public Match createMatch(ArrayList<String> users)
+    public Match updateMatchResults(Integer matchId, Integer creatorScore, Integer opponentScore)
     {
-        if (users == null)
-            return null;
-
-        // create an entry in the match table first to get an id
-        Match newMatch = new Match();
-
-        newMatch.setCreationTimestamp(new Date());
-        newMatch.setVictorUser(null);
+        Match match = null;
         try
         {
-            newMatch.setCreatorUser(userDao.queryForId(users.get(0)));
-        }
-        catch (SQLException sqle)
-        {
-            logger.error(sqle);
-            return null;
-        }
-        // check on what the match statuses will be
-        // newMatch.setStatusId(0);
-        newMatch.setMatchTimestamp(null);
-
-        try
-        {
-            matchDao.create(newMatch);
-        }
-        catch (SQLException sqle)
-        {
-            logger.error(sqle);
-            return null;
-        }
-
-        // iterate over users, write an entry to match_user for each
-        for (String userId : users)
-        {
-            MatchUser tempMatchUser = createMatchUser(userId, Integer.toString(newMatch.getId()));
-            if (tempMatchUser == null)
+            if (creatorScore == null || opponentScore == null)
             {
-                logger.error("Unable to create a MatchUser for userId " + userId);
                 return null;
             }
-        }
 
-        return newMatch;
-    }
+            match = matchDao.queryForId(matchId.toString());
 
-    public Match updateMatch(String matchId, String victorId, Date matchTimestamp, String status, Date creationTimestamp, String creatorId)
-    {
-        // all values will be optional (except matchId), pass in null to make no change
+            if (match == null)
+            {
+                return null;
+            }
 
-        Match match = getMatch(matchId);
-
-        if (match == null)
-            return null;
-        try
-        {
-            if (victorId != null)
-                match.setVictorUser(userDao.queryForId(victorId));
-
-            if (matchTimestamp != null)
-                match.setMatchTimestamp(matchTimestamp);
-
-            if (status != null)
-                match.setMatchStatus(matchStatusDao.queryForId(status));
-
-            if (creationTimestamp != null)
-                match.setCreationTimestamp(creationTimestamp);
-
-            if (creatorId != null)
-                match.setCreatorUser(userDao.queryForId(creatorId));
+            match.setOpponentScore(opponentScore);
+            match.setCreatorScore(creatorScore);
+            match.setMatchTimestamp(new Date());
+            match.setMatchStatus(matchStatusDao.queryForId(Constants.MATCH_STATUS_COMPLETED));
 
             matchDao.update(match);
+
+            if (creatorScore > opponentScore)
+            {
+                RankingService rankingService = new RankingService();
+                rankingService.swapRankings(match.getCreatorUser(), match.getOpponentUser());
+            }
+            // TODO ranking and ranking_history
+            // swapRankings(userId,userId)
+            // addRankingHistory
+
         }
-        catch (SQLException sqle)
+        catch (Exception e)
         {
-            logger.error(sqle);
+            logger.error(e);
             return null;
         }
         return match;

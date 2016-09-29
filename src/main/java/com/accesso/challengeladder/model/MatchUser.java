@@ -3,6 +3,7 @@ package com.accesso.challengeladder.model;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
+@Deprecated
 @DatabaseTable(tableName = "match_user")
 public class MatchUser
 {
