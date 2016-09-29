@@ -41,7 +41,7 @@ public class UserController
         put("/users", (req, res) -> userService.updateUser(new Gson().fromJson(req.body(), User.class)));
 
         get("/users/:id", (req, res) -> {
-            User user = userService.getUserData(req.params(":id"));
+            User user = userService.getUser(req.params(":id"));
                 if (user == null)
                 {
                     res.status(HttpStatus.NOT_FOUND_404);

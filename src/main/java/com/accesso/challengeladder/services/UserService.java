@@ -100,17 +100,6 @@ public class UserService
         return user;
     }
 
-    public User getUserData(String userId) throws SQLException
-    {
-        User user = null;
-        if (userId != null)
-        {
-            user = userDao.queryForId(userId);
-        }
-
-        return user;
-    }
-
     public User getUserByEmail(String email) throws SQLException
     {
         Map newMap = new HashMap();
