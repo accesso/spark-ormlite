@@ -10,7 +10,7 @@ public class User
     @DatabaseField(generatedId = true)
     private int id;
 
-    @DatabaseField
+    @DatabaseField(columnName = "name")
     private String name;
 
     @DatabaseField

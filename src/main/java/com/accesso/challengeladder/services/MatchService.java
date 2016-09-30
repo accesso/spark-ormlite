@@ -1,19 +1,19 @@
 package com.accesso.challengeladder.services;
 
+import com.accesso.challengeladder.model.*;
+import com.accesso.challengeladder.utils.Constants;
+import com.accesso.challengeladder.utils.DBHelper;
+import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.dao.DaoManager;
+import com.j256.ormlite.stmt.QueryBuilder;
+import com.j256.ormlite.support.ConnectionSource;
+import org.apache.log4j.Logger;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import com.accesso.challengeladder.model.*;
-import org.apache.log4j.Logger;
-
-import com.accesso.challengeladder.utils.Constants;
-import com.accesso.challengeladder.utils.DBHelper;
-import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.dao.DaoManager;
-import com.j256.ormlite.support.ConnectionSource;
 
 public class MatchService
 {
@@ -100,7 +100,7 @@ public class MatchService
         List<MatchDetails> matchDetailsList = new ArrayList<>();
         List<MatchUser> matchUserList = getMatchUsersByUser(userId);
         MatchDetails matchDetails;
-        for(MatchUser matchUser : matchUserList)
+        for (MatchUser matchUser : matchUserList)
         {
             String matchId = Integer.toString(matchUser.getMatch().getId());
             matchDetails = getMatchDetails(matchId);
@@ -232,6 +232,22 @@ public class MatchService
     {
         List<Match> matchList = matchDao.queryForAll();
         return matchList;
+    }
+
+    public List<Match> getRecentMatches(int limit) throws SQLException
+    {
+        QueryBuilder<Match, String> qb = matchDao.queryBuilder();
+        qb.orderBy("match_timestamp", false);
+        qb.limit(Long.valueOf(limit));
+        List<Match> matchList = qb.query();
+
+        for (Match m : matchList)
+        {
+            userDao.refresh(m.getCreatorUser());
+            userDao.refresh(m.getOpponentUser());
+        }
+        return matchList;
+
     }
 
     private MatchUser createMatchUser(String userId, String matchId)

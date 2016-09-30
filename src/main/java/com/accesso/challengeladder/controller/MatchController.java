@@ -1,8 +1,11 @@
 package com.accesso.challengeladder.controller;
 
-import static spark.Spark.get;
-import static spark.Spark.post;
-import static spark.Spark.put;
+import com.accesso.challengeladder.model.Match;
+import com.accesso.challengeladder.requests.PostMatchesRequest;
+import com.accesso.challengeladder.services.MatchService;
+import com.accesso.challengeladder.utils.JsonUtil;
+import com.google.gson.Gson;
+import org.eclipse.jetty.http.HttpStatus;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -11,13 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.eclipse.jetty.http.HttpStatus;
-
-import com.accesso.challengeladder.model.Match;
-import com.accesso.challengeladder.requests.PostMatchesRequest;
-import com.accesso.challengeladder.services.MatchService;
-import com.accesso.challengeladder.utils.JsonUtil;
-import com.google.gson.Gson;
+import static spark.Spark.*;
 
 public class MatchController
 {
@@ -33,6 +30,11 @@ public class MatchController
         // get information about a match
         get("/matches/:id", (req, res) -> {
             return JsonUtil.toJson(matchService.getMatch(req.params(":id")));
+        });
+
+        // get information of recent matches
+        get("/recent_matches/:limit", (req, res) -> {
+            return JsonUtil.toJson(matchService.getRecentMatches(Integer.valueOf(req.params(":limit"))));
         });
 
         // get all users in a match
@@ -61,11 +63,12 @@ public class MatchController
                 });
 
         // TODO params are passed as a json string in the body entity
-        put("/matches/:id", (req, res) -> {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            return JsonUtil.toJson(matchService.updateMatch(req.queryParams("matchId"), req.queryParams("victorId"),
-                    sdf.parse(req.queryParams("matchTimestamp")), req.queryParams("status"), sdf.parse(req.queryParams("creationTimestamp")),
-                    req.queryParams("creatorId")));
-        });
+        put("/matches/:id",
+                (req, res) -> {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    return JsonUtil.toJson(matchService.updateMatch(req.queryParams("matchId"), req.queryParams("victorId"),
+                            sdf.parse(req.queryParams("matchTimestamp")), req.queryParams("status"), sdf.parse(req.queryParams("creationTimestamp")),
+                            req.queryParams("creatorId")));
+                });
     }
 }

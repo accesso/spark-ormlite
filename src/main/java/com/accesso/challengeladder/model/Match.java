@@ -27,6 +27,15 @@ public class Match
 	@DatabaseField(columnName = "creator_user_id", foreign = true)
 	private User creatorUser;
 
+	@DatabaseField(columnName = "opponent_user_id", foreign = true)
+	private User opponentUser;
+
+	@DatabaseField(columnName = "creator_score")
+	private int creatorScore;
+
+	@DatabaseField(columnName = "opponent_score")
+	private int opponentScore;
+
 	public Match()
 	{
 		// ORMLite needs a no-arg constructor
@@ -87,4 +96,33 @@ public class Match
 		this.creatorUser = creatorUser;
 	}
 
+	public int getCreatorScore()
+	{
+		return creatorScore;
+	}
+
+	public void setCreatorScore(int creatorScore)
+	{
+		this.creatorScore = creatorScore;
+	}
+
+	public int getOpponentScore()
+	{
+		return opponentScore;
+	}
+
+	public void setOpponentScore(int opponentScore)
+	{
+		this.opponentScore = opponentScore;
+	}
+
+	public User getOpponentUser()
+	{
+		return opponentUser;
+	}
+
+	public void setOpponentUser(User opponentUser)
+	{
+		this.opponentUser = opponentUser;
+	}
 }
