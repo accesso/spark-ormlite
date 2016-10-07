@@ -7,50 +7,38 @@ package com.accesso.challengeladder.requests;
  */
 public class PutMatchesRequest
 {
-    private Integer matchId;
-    private Integer creatorScore;
-    private Integer opponentScore;
+	private Integer creatorScore;
+	private Integer opponentScore;
 
-    public PutMatchesRequest(Integer matchId, Integer creatorScore, Integer opponentScore)
-    {
-        this.matchId = matchId;
-        this.creatorScore = creatorScore;
-        this.opponentScore = opponentScore;
-    }
+	public PutMatchesRequest(Integer creatorScore, Integer opponentScore)
+	{
+		this.creatorScore = creatorScore;
+		this.opponentScore = opponentScore;
+	}
 
-    public Integer getMatchId()
-    {
-        return matchId;
-    }
+	public Integer getCreatorScore()
+	{
+		return creatorScore;
+	}
 
-    public Integer getCreatorScore()
-    {
-        return creatorScore;
-    }
+	public Integer getOpponentScore()
+	{
+		return opponentScore;
+	}
 
-    public Integer getOpponentScore()
-    {
-        return opponentScore;
-    }
+	public void setCreatorScore(Integer creatorScore)
+	{
+		this.creatorScore = creatorScore;
+	}
 
-    public void setMatchId(Integer matchId)
-    {
-        this.matchId = matchId;
-    }
+	public void setOpponentScore(Integer opponentScore)
+	{
+		this.opponentScore = opponentScore;
+	}
 
-    public void setCreatorScore(Integer creatorScore)
-    {
-        this.creatorScore = creatorScore;
-    }
-
-    public void setOpponentScore(Integer opponentScore)
-    {
-        this.opponentScore = opponentScore;
-    }
-
-    @Override
-    public String toString()
-    {
-        return "PutMatchesRequest [matchId=" + matchId + ", creatorScore=" + creatorScore + ", opponentScore=" + opponentScore + "]";
-    }
+	@Override
+	public String toString()
+	{
+		return "PutMatchesRequest [creatorScore=" + creatorScore + ", opponentScore=" + opponentScore + "]";
+	}
 }

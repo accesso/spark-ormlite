@@ -2,204 +2,153 @@ package com.accesso.challengeladder.services;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 
 import com.accesso.challengeladder.model.Match;
-import com.accesso.challengeladder.model.MatchDetails;
 import com.accesso.challengeladder.model.MatchStatus;
-import com.accesso.challengeladder.model.MatchUser;
 import com.accesso.challengeladder.model.User;
 import com.accesso.challengeladder.utils.Constants;
 import com.accesso.challengeladder.utils.DBHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
+import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 
 public class MatchService
 {
-    private ConnectionSource connectionSource;
-    private Dao<Match, String> matchDao;
-    private Dao<User, String> userDao;
-    private Dao<MatchUser, String> matchUserDao;
-    private Dao<MatchStatus, String> matchStatusDao;
+	private ConnectionSource connectionSource;
+	private Dao<Match, String> matchDao;
+	private Dao<User, String> userDao;
+	private Dao<MatchStatus, String> matchStatusDao;
 
-    private static final Logger logger = Logger.getLogger(MatchService.class.getCanonicalName());
+	private static final Logger logger = Logger.getLogger(MatchService.class.getCanonicalName());
 
-    public MatchService() throws SQLException, IOException
-    {
-        DBHelper dBHelper = new DBHelper();
-        ConnectionSource connectionSource = dBHelper.getConnectionSource();
+	public MatchService() throws SQLException, IOException
+	{
+		DBHelper dBHelper = new DBHelper();
+		ConnectionSource connectionSource = dBHelper.getConnectionSource();
 
-        this.connectionSource = connectionSource;
-        matchDao = DaoManager.createDao(this.connectionSource, Match.class);
-        userDao = DaoManager.createDao(this.connectionSource, User.class);
-        matchUserDao = DaoManager.createDao(this.connectionSource, MatchUser.class);
-        matchStatusDao = DaoManager.createDao(this.connectionSource, MatchStatus.class);
-    }
+		this.connectionSource = connectionSource;
+		matchDao = DaoManager.createDao(this.connectionSource, Match.class);
+		userDao = DaoManager.createDao(this.connectionSource, User.class);
+		matchStatusDao = DaoManager.createDao(this.connectionSource, MatchStatus.class);
+	}
 
-    public Match getMatch(String id)
-    {
-        Match response;
+	public Match getMatch(String id)
+	{
+		Match response;
 
-        try
-        {
-            response = matchDao.queryForId(id);
-        }
-        catch (SQLException sqle)
-        {
-            logger.error(sqle);
-            return null;
-        }
-        return response;
-    }
+		try
+		{
+			response = matchDao.queryForId(id);
+		}
+		catch (SQLException sqle)
+		{
+			logger.error(sqle);
+			return null;
+		}
+		return response;
+	}
 
-    public List<MatchUser> getMatchUsers(String matchId)
-    {
+	public List<Match> getMatchesByUser(String userId)
+	{
 
-        List<MatchUser> response;
-        try
-        {
-            response = matchUserDao.queryForEq("match_id", matchId);
-        }
-        catch (SQLException sqle)
-        {
-            logger.error(sqle);
-            return null;
-        }
-        return response;
-    }
+		List<Match> matches;
+		try
+		{
+			UserService userService = new UserService();
+			User user = userService.getUser(userId);
 
-    public List<MatchUser> getMatchUsersByUser(String userId)
-    {
+			matches = getMatchesByUser(user);
+		}
+		catch (SQLException | IOException e)
+		{
+			logger.error(e);
+			return null;
+		}
+		return matches;
+	}
 
-        List<MatchUser> response;
-        try
-        {
-            response = matchUserDao.queryForEq("user_id", userId);
-        }
-        catch (SQLException sqle)
-        {
-            logger.error(sqle);
-            return null;
-        }
-        return response;
-    }
+	public Match createMatch(Integer creatorUserId, Integer opponentUserId)
+	{
+		// create an entry in the match table first to get an id
+		Match newMatch = new Match();
 
-    public MatchDetails getMatchDetails(String matchId) throws SQLException
-    {
-        List<MatchUser> matchUserList = getMatchUsers(matchId);
-        Match match = getMatch(matchId);
-        MatchDetails response = new MatchDetails();
-        response.setMatch(match);
-        response.setMatchUserList(matchUserList);
-        return response;
-    }
+		newMatch.setCreationTimestamp(new Date());
+		newMatch.setVictorUser(null);
+		try
+		{
+			newMatch.setCreatorUser(userDao.queryForId(creatorUserId.toString()));
+			newMatch.setOpponentUser(userDao.queryForId(opponentUserId.toString()));
+			newMatch.setMatchStatus(matchStatusDao.queryForId(Constants.MATCH_STATUS_PENDING));
+			matchDao.create(newMatch);
+		}
+		catch (SQLException sqle)
+		{
+			logger.error(sqle);
+			return null;
+		}
+		return newMatch;
+	}
 
-    public List<MatchDetails> getMatchDetailsForUser(String userId) throws SQLException
-    {
-        List<MatchDetails> matchDetailsList = new ArrayList<>();
-        List<MatchUser> matchUserList = getMatchUsersByUser(userId);
-        MatchDetails matchDetails;
-        for (MatchUser matchUser : matchUserList)
-        {
-            String matchId = Integer.toString(matchUser.getMatch().getId());
-            matchDetails = getMatchDetails(matchId);
-            matchDetailsList.add(matchDetails);
-        }
-        return matchDetailsList;
-    }
+	public Match updateMatchResults(Integer matchId, Integer creatorScore, Integer opponentScore)
+	{
+		Match match = null;
+		try
+		{
+			if (creatorScore == null || opponentScore == null)
+			{
+				return null;
+			}
 
-    public Match createMatch(Integer creatorUserId, Integer opponentUserId)
-    {
-        // create an entry in the match table first to get an id
-        Match newMatch = new Match();
+			match = matchDao.queryForId(matchId.toString());
 
-        newMatch.setCreationTimestamp(new Date());
-        newMatch.setVictorUser(null);
-        try
-        {
-            newMatch.setCreatorUser(userDao.queryForId(creatorUserId.toString()));
-            newMatch.setOpponentUser(userDao.queryForId(opponentUserId.toString()));
-            newMatch.setMatchStatus(matchStatusDao.queryForId(Constants.MATCH_STATUS_PENDING));
-            matchDao.create(newMatch);
-        }
-        catch (SQLException sqle)
-        {
-            logger.error(sqle);
-            return null;
-        }
-        return newMatch;
-    }
+			if (match == null)
+			{
+				return null;
+			}
 
-    public Match updateMatchResults(Integer matchId, Integer creatorScore, Integer opponentScore)
-    {
-        Match match = null;
-        try
-        {
-            if (creatorScore == null || opponentScore == null)
-            {
-                return null;
-            }
+			match.setOpponentScore(opponentScore);
+			match.setCreatorScore(creatorScore);
+			match.setMatchTimestamp(new Date());
+			match.setMatchStatus(matchStatusDao.queryForId(Constants.MATCH_STATUS_COMPLETED));
 
-            match = matchDao.queryForId(matchId.toString());
+			if (creatorScore > opponentScore)
+			{
+				match.setVictorUser(match.getCreatorUser());
+				RankingService rankingService = new RankingService();
+				rankingService.swapRankings(match.getCreatorUser(), match.getOpponentUser(), matchId);
+			}
+			else
+			{
+				match.setVictorUser(match.getOpponentUser());
+			}
 
-            if (match == null)
-            {
-                return null;
-            }
+			matchDao.update(match);
+		}
+		catch (Exception e)
+		{
+			logger.error(e);
+			return null;
+		}
+		return match;
+	}
 
-            match.setOpponentScore(opponentScore);
-            match.setCreatorScore(creatorScore);
-            match.setMatchTimestamp(new Date());
-            match.setMatchStatus(matchStatusDao.queryForId(Constants.MATCH_STATUS_COMPLETED));
+	public List<Match> getAllMatches() throws SQLException
+	{
+		List<Match> matchList = matchDao.queryForAll();
+		return matchList;
+	}
 
-            matchDao.update(match);
+	public List<Match> getMatchesByUser(User user) throws SQLException
+	{
+		QueryBuilder<Match, String> matchQB = matchDao.queryBuilder();
+		matchQB.where().eq("opponent_user_id", user).or().eq("creator_user_id", user);
+		List<Match> matchList = matchQB.query();
 
-            if (creatorScore > opponentScore)
-            {
-                RankingService rankingService = new RankingService();
-                rankingService.swapRankings(match.getCreatorUser(), match.getOpponentUser());
-            }
-            // TODO ranking and ranking_history
-            // swapRankings(userId,userId)
-            // addRankingHistory
-
-        }
-        catch (Exception e)
-        {
-            logger.error(e);
-            return null;
-        }
-        return match;
-    }
-
-    public List<Match> getAllMatches() throws SQLException
-    {
-        List<Match> matchList = matchDao.queryForAll();
-        return matchList;
-    }
-
-    private MatchUser createMatchUser(String userId, String matchId)
-    {
-
-        MatchUser newMatchUser = new MatchUser();
-
-        try
-        {
-            newMatchUser.setUser(userDao.queryForId(userId));
-            newMatchUser.setMatch(matchDao.queryForId(matchId));
-            matchUserDao.create(newMatchUser);
-        }
-        catch (SQLException sqle)
-        {
-            logger.error(sqle);
-            return null;
-        }
-
-        return newMatchUser;
-    }
+		return matchList;
+	}
 }

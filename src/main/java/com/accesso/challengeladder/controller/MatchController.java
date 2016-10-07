@@ -19,52 +19,62 @@ import com.google.gson.Gson;
 
 public class MatchController
 {
-    public MatchController() throws SQLException, IOException
-    {
-        MatchService matchService = new MatchService();
+	public MatchController() throws SQLException, IOException
+	{
+		MatchService matchService = new MatchService();
 
-        get("/matches", (req, res) -> {
-            List<Match> rankings = matchService.getAllMatches();
-            return JsonUtil.toJson(rankings);
-        });
+		get("/matches", (req, res) -> {
+			List<Match> rankings = matchService.getAllMatches();
+			return JsonUtil.toJson(rankings);
+		});
 
-        // get information about a match
-        get("/matches/:id", (req, res) -> {
-            return JsonUtil.toJson(matchService.getMatch(req.params(":id")));
-        });
+		// get information about a match
+		get("/matches/:id", (req, res) -> {
+			return JsonUtil.toJson(matchService.getMatch(req.params(":id")));
+		});
 
-        post("/matches", (req, res) -> {
-            PostMatchesRequest postMatchesRequest = new Gson().fromJson(req.body(), PostMatchesRequest.class);
+		get("/matches/user/:id", (req, res) -> {
+			return JsonUtil.toJson(matchService.getMatchesByUser(req.params(":id")));
+		});
 
-            Match match = matchService.createMatch(postMatchesRequest.getCreatorUserId(), postMatchesRequest.getOpponentUserId());
+		post("/matches", (req, res) -> {
+			PostMatchesRequest postMatchesRequest = new Gson().fromJson(req.body(), PostMatchesRequest.class);
 
-            if (match == null)
-            {
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR_500);
-                return "Error creating match";
-            }
-            else
-            {
-                return JsonUtil.toJson(match);
-            }
-        });
+			Match match = matchService.createMatch(postMatchesRequest.getCreatorUserId(), postMatchesRequest.getOpponentUserId());
 
-        // TODO params are passed as a json string in the body entity
-        put("/matches/:id",
-                (req, res) -> {
-                    PutMatchesRequest putMatchesRequest = new Gson().fromJson(req.body(), PutMatchesRequest.class);
-                    Match match = matchService.updateMatchResults(putMatchesRequest.getMatchId(), putMatchesRequest.getCreatorScore(),
-                            putMatchesRequest.getOpponentScore());
+			if (match == null)
+			{
+				res.status(HttpStatus.INTERNAL_SERVER_ERROR_500);
+				return "Error creating match";
+			}
+			else
+			{
+				return JsonUtil.toJson(match);
+			}
+		});
 
-                    if (match == null)
-                    {
-                        res.status(HttpStatus.INTERNAL_SERVER_ERROR_500);
-                        return "Error updating match";
-                    }
-                    else
-                    {
-                        return JsonUtil.toJson(match);
-                    }
-                });
-    }
+		put("/matches/:id", (req, res) -> {
+
+			Integer matchId = Integer.valueOf(req.params(":id"));
+			PutMatchesRequest putMatchesRequest = new Gson().fromJson(req.body(), PutMatchesRequest.class);
+
+			if (putMatchesRequest.getCreatorScore() == putMatchesRequest.getOpponentScore())
+			{
+				res.status(HttpStatus.BAD_REQUEST_400);
+				return "Scores should be different";
+			}
+
+			Match match = matchService.updateMatchResults(matchId, putMatchesRequest.getCreatorScore(), putMatchesRequest.getOpponentScore());
+
+			if (match == null)
+			{
+				res.status(HttpStatus.INTERNAL_SERVER_ERROR_500);
+				return "Error updating match";
+			}
+			else
+			{
+				return JsonUtil.toJson(match);
+			}
+		});
+	}
 }

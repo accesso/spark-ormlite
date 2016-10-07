@@ -17,41 +17,41 @@ import com.google.gson.Gson;
 
 public class UserController
 {
-    public UserController() throws SQLException, IOException
-    {
+	public UserController() throws SQLException, IOException
+	{
 
-        UserService userService = new UserService();
-        RankingService rankingService = new RankingService();
+		UserService userService = new UserService();
+		RankingService rankingService = new RankingService();
 
-        // Routes, logic defined in the service
-        get("/users", (req, res) -> JsonUtil.toJson(userService.getAllUsers()));
+		// Routes, logic defined in the service
+		get("/users", (req, res) -> JsonUtil.toJson(userService.getAllUsers()));
 
-        post("/users", (req, res) -> {
-            User newUser = new Gson().fromJson(req.body(), User.class);
-            boolean result = userService.addUser(newUser);
-            if (result)
-            {
-                User createdUser = userService.getUserByEmail(newUser.getEmail());
-                Integer createdUserId = createdUser.getId();
-                rankingService.createRanking(createdUserId.toString());
-            }
-            return result;
-        });
+		post("/users", (req, res) -> {
+			User newUser = new Gson().fromJson(req.body(), User.class);
+			boolean result = userService.addUser(newUser);
+			if (result)
+			{
+				User createdUser = userService.getUserByEmail(newUser.getEmail());
+				Integer createdUserId = createdUser.getId();
+				rankingService.createRanking(createdUserId.toString());
+			}
+			return result;
+		});
 
-        put("/users", (req, res) -> userService.updateUser(new Gson().fromJson(req.body(), User.class)));
+		put("/users", (req, res) -> userService.updateUser(new Gson().fromJson(req.body(), User.class)));
 
-        get("/users/:id", (req, res) -> {
-            User user = userService.getUserData(req.params(":id"));
-                if (user == null)
-                {
-                    res.status(HttpStatus.NOT_FOUND_404);
-                    return "User not found";
-                }
-                else
-                {
-                    return JsonUtil.toJson(user);
-                }
-            });
+		get("/users/:id", (req, res) -> {
+			User user = userService.getUser(req.params(":id"));
+			if (user == null)
+			{
+				res.status(HttpStatus.NOT_FOUND_404);
+				return "User not found";
+			}
+			else
+			{
+				return JsonUtil.toJson(user);
+			}
+		});
 
-    }
+	}
 }
