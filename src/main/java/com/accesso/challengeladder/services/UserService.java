@@ -87,12 +87,14 @@ public class UserService
         }
     }
 
-    public User getUser(String userId) throws SQLException
+    public User getUser(String userId) throws SQLException, IOException
     {
         User user = null;
         if (userId != null)
         {
             user = userDao.queryForId(userId);
+            user = populateUserWinsLosses(user);
+            // getMatchRecord(user);
         }
 
         return user;
