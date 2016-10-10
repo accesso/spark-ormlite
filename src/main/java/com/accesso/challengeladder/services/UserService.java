@@ -94,6 +94,7 @@ public class UserService
         {
             user = userDao.queryForId(userId);
             getMatchRecord(user);
+            user = populateUserWinsLosses(user);
         }
 
         return user;
