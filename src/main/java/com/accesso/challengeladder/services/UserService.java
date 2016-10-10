@@ -94,8 +94,6 @@ public class UserService
         {
             user = userDao.queryForId(userId);
             getMatchRecord(user);
-
-            user = populateUserWinsLosses(user);
         }
 
         return user;
@@ -208,6 +206,8 @@ public class UserService
 	 */
     public void getMatchRecord(User user) throws SQLException
     {
+
+        user = populateUserWinsLosses(user);
 //        QueryBuilder<MatchUser, String> matchUserQB = matchUserDao.queryBuilder();
 //        matchUserQB.where().eq("user_id", user);
 //
