@@ -26,6 +26,8 @@ public class UserService
     private static String salt;
     private Dao<Match, String> matchDao;
 
+	// private Dao<MatchUser, String> matchUserDao;
+
     public UserService() throws SQLException, IOException
     {
         DBHelper dBHelper = new DBHelper();
@@ -33,7 +35,9 @@ public class UserService
 
         this.connectionSource = connectionSource;
         userDao = DaoManager.createDao(this.connectionSource, User.class);
+
         matchDao = DaoManager.createDao(this.connectionSource, Match.class);
+		// matchUserDao = DaoManager.createDao(this.connectionSource, MatchUser.class);
     }
 
     public boolean addUser(User newUser)
@@ -83,13 +87,13 @@ public class UserService
         }
     }
 
-	public User getUser(String userId) throws SQLException, IOException
+    public User getUser(String userId) throws SQLException
     {
         User user = null;
         if (userId != null)
         {
             user = userDao.queryForId(userId);
-			user = populateUserWinsLosses(user);
+			// getMatchRecord(user);
         }
 
         return user;
@@ -143,39 +147,75 @@ public class UserService
     }
 
 
+  	/**
+  	 * Queries for the match entries and calculates the number of wins and losses and stores them in the User object
+  	 *
+  	 * @param user
+  	 * @throws SQLException
+  	 * @throws IOException
+  	 */
+  	public User populateUserWinsLosses(User user) throws SQLException, IOException
+  	{
+  		// QueryBuilder<Match, String> matchQB = matchDao.queryBuilder();
+  		// matchQB.where().eq("opponent_user_id", user).or().eq("creator_user_id", user);
+  		// List<Match> matchList = matchQB.query();
+
+  		MatchService matchService = new MatchService();
+  		List<Match> matchList = matchService.getMatchesByUser(user);
+
+  		int numWins = 0;
+  		int numLosses = 0;
+
+  		for (Match match : matchList)
+  		{
+  			if (match.getVictorUser() != null)
+  			{
+  				if (match.getVictorUser().getId() != user.getId())
+  				{
+  					numLosses++;
+  				}
+  				else
+  				{
+  					numWins++;
+  				}
+  			}
+  		}
+
+  		user.setNumWins(numWins);
+  		user.setNumLosses(numLosses);
+
+  		return user;
+  	}
+  	
 	/**
-	 * Queries for the match entries and calculates the number of wins and losses and stores them in the User object
+	 * Queries for the match_user entries and calculates the number of wins and losses and stores them in the User object
 	 *
 	 * @param user
 	 * @throws SQLException
-	 * @throws IOException
 	 */
-	public User populateUserWinsLosses(User user) throws SQLException, IOException
-	{
-		MatchService matchService = new MatchService();
-		List<Match> matchList = matchService.getMatchesByUser(user);
-
-		int numWins = 0;
-		int numLosses = 0;
-
-		for (Match match : matchList)
-		{
-			if (match.getVictorUser() != null)
-			{
-				if (match.getVictorUser().getId() != user.getId())
-				{
-					numLosses++;
-				}
-				else
-				{
-					numWins++;
-				}
-			}
-		}
-
-		user.setNumWins(numWins);
-		user.setNumLosses(numLosses);
-
-		return user;
-	}
+//    public void getMatchRecord(User user) throws SQLException
+//    {
+//        QueryBuilder<MatchUser, String> matchUserQB = matchUserDao.queryBuilder();
+//        matchUserQB.where().eq("user_id", user);
+//
+//        int numWins = 0;
+//        int numLosses = 0;
+//
+//        List<MatchUser> matchUserList = matchUserQB.query();
+//        for (MatchUser mu : matchUserList)
+//        {
+//            matchDao.refresh(mu.getMatch());
+//            if (mu.getMatch().getVictorUser().getId() != user.getId())
+//            {
+//                numLosses++;
+//            }
+//            else
+//            {
+//                numWins++;
+//            }
+//        }
+//
+//        user.setNumWins(numWins);
+//        user.setNumLosses(numLosses);
+//    }
 }
