@@ -87,14 +87,14 @@ public class UserService
         }
     }
 
-    public User getUser(String userId) throws SQLException, IOException
+	public User getUser(String userId) throws SQLException
     {
         User user = null;
         if (userId != null)
         {
             user = userDao.queryForId(userId);
+            getMatchRecord(user);
             user = populateUserWinsLosses(user);
-            // getMatchRecord(user);
         }
 
         return user;
@@ -155,14 +155,14 @@ public class UserService
   	 * @throws SQLException
   	 * @throws IOException
   	 */
-  	public User populateUserWinsLosses(User user) throws SQLException, IOException
+    public User populateUserWinsLosses(User user)
   	{
-  		// QueryBuilder<Match, String> matchQB = matchDao.queryBuilder();
-  		// matchQB.where().eq("opponent_user_id", user).or().eq("creator_user_id", user);
-  		// List<Match> matchList = matchQB.query();
+		MatchService matchService;
+		try
+		{
+			matchService = new MatchService();
 
-  		MatchService matchService = new MatchService();
-  		List<Match> matchList = matchService.getMatchesByUser(user);
+			List<Match> matchList = matchService.getMatchesByUser(user);
 
   		int numWins = 0;
   		int numLosses = 0;
@@ -185,17 +185,28 @@ public class UserService
   		user.setNumWins(numWins);
   		user.setNumLosses(numLosses);
 
-  		return user;
-  	}
-  	
+		}
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch (SQLException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return user;
+	}
+
 	/**
 	 * Queries for the match_user entries and calculates the number of wins and losses and stores them in the User object
 	 *
 	 * @param user
 	 * @throws SQLException
 	 */
-//    public void getMatchRecord(User user) throws SQLException
-//    {
+    public void getMatchRecord(User user) throws SQLException
+    {
 //        QueryBuilder<MatchUser, String> matchUserQB = matchUserDao.queryBuilder();
 //        matchUserQB.where().eq("user_id", user);
 //
@@ -218,5 +229,5 @@ public class UserService
 //
 //        user.setNumWins(numWins);
 //        user.setNumLosses(numLosses);
-//    }
+    }
 }
