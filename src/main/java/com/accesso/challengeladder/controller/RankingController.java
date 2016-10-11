@@ -13,17 +13,15 @@ import com.accesso.challengeladder.utils.JsonUtil;
 
 public class RankingController
 {
-	public RankingController() throws SQLException, IOException
-	{
-		RankingService rankingService = new RankingService();
+    public RankingController() throws SQLException, IOException
+    {
+        RankingService rankingService = new RankingService();
 
-		get("/ranking", (req, res) -> {
-			List<Ranking> rankings = rankingService.getRanking();
-			return JsonUtil.toJson(rankings);
-		});
+        get("/ranking", (req, res) -> {
+            List<Ranking> rankings = rankingService.getRanking();
+            return JsonUtil.toJson(rankings);
+        });
 
-        post("/ranking", (req, res) -> rankingService.createRanking(
-                    req.queryParams("userId")),
-            JsonUtil.json());
-	}
+        post("/ranking", (req, res) -> rankingService.createRanking(req.queryParams("userId")), JsonUtil.json());
+    }
 }

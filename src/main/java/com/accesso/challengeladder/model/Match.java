@@ -9,82 +9,121 @@ import com.j256.ormlite.table.DatabaseTable;
 public class Match
 {
 
-	@DatabaseField(generatedId = true)
-	private int id;
+    @DatabaseField(generatedId = true)
+    private int id;
 
-	@DatabaseField(columnName = "match_timestamp")
-	private Date matchTimestamp;
+    @DatabaseField(columnName = "status_id", foreign = true)
+    private MatchStatus matchStatus;
 
-	@DatabaseField(columnName = "creation_timestamp")
-	private Date creationTimestamp;
+    @DatabaseField(columnName = "creator_user_id", foreign = true)
+    private User creatorUser;
 
-	@DatabaseField(columnName = "victor_user_id", foreign = true)
-	private User victorUser;
+    @DatabaseField(columnName = "opponent_user_id", foreign = true)
+    private User opponentUser;
 
-	@DatabaseField(columnName = "status_id", foreign = true)
-	private MatchStatus matchStatus;
+    @DatabaseField(columnName = "creator_score")
+    private Integer creatorScore;
 
-	@DatabaseField(columnName = "creator_user_id", foreign = true)
-	private User creatorUser;
+    @DatabaseField(columnName = "opponent_score")
+    private Integer opponentScore;
 
-	public Match()
-	{
-		// ORMLite needs a no-arg constructor
-	}
+    @DatabaseField(columnName = "victor_user_id", foreign = true)
+    private User victorUser;
 
-	public int getId()
-	{
-		return this.id;
-	}
+    @DatabaseField(columnName = "match_timestamp")
+    private Date matchTimestamp;
 
-	public Date getMatchTimestamp()
-	{
-		return matchTimestamp;
-	}
+    @DatabaseField(columnName = "creation_timestamp")
+    private Date creationTimestamp;
 
-	public Date getCreationTimestamp()
-	{
-		return creationTimestamp;
-	}
+    public Match()
+    {
+        // ORMLite needs a no-arg constructor
+    }
 
-	public void setMatchTimestamp(Date matchTimestamp)
-	{
-		this.matchTimestamp = matchTimestamp;
-	}
+    public int getId()
+    {
+        return this.id;
+    }
 
-	public void setCreationTimestamp(Date creationTimestamp)
-	{
-		this.creationTimestamp = creationTimestamp;
-	}
+    public Date getMatchTimestamp()
+    {
+        return matchTimestamp;
+    }
 
-	public User getVictorUser()
-	{
-		return victorUser;
-	}
+    public Date getCreationTimestamp()
+    {
+        return creationTimestamp;
+    }
 
-	public MatchStatus getMatchStatus()
-	{
-		return matchStatus;
-	}
+    public void setMatchTimestamp(Date matchTimestamp)
+    {
+        this.matchTimestamp = matchTimestamp;
+    }
 
-	public User getCreatorUser()
-	{
-		return creatorUser;
-	}
+    public void setCreationTimestamp(Date creationTimestamp)
+    {
+        this.creationTimestamp = creationTimestamp;
+    }
 
-	public void setVictorUser(User victorUser)
-	{
-		this.victorUser = victorUser;
-	}
+    public User getVictorUser()
+    {
+        return victorUser;
+    }
 
-	public void setMatchStatus(MatchStatus matchStatus)
-	{
-		this.matchStatus = matchStatus;
-	}
+    public MatchStatus getMatchStatus()
+    {
+        return matchStatus;
+    }
 
-	public void setCreatorUser(User creatorUser)
-	{
-		this.creatorUser = creatorUser;
-	}
+    public User getCreatorUser()
+    {
+        return creatorUser;
+    }
+
+    public void setVictorUser(User victorUser)
+    {
+        this.victorUser = victorUser;
+    }
+
+    public void setMatchStatus(MatchStatus matchStatus)
+    {
+        this.matchStatus = matchStatus;
+    }
+
+    public void setCreatorUser(User creatorUser)
+    {
+        this.creatorUser = creatorUser;
+    }
+
+    public User getOpponentUser()
+    {
+        return opponentUser;
+    }
+
+    public Integer getCreatorScore()
+    {
+        return creatorScore;
+    }
+
+    public Integer getOpponentScore()
+    {
+        return opponentScore;
+    }
+
+    public void setOpponentUser(User opponentUser)
+    {
+        this.opponentUser = opponentUser;
+    }
+
+    public void setCreatorScore(Integer creatorScore)
+    {
+        this.creatorScore = creatorScore;
+    }
+
+    public void setOpponentScore(Integer opponentScore)
+    {
+        this.opponentScore = opponentScore;
+    }
 
 }
