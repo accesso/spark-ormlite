@@ -2,16 +2,15 @@ package com.accesso.challengeladder;
 
 import java.io.IOException;
 import java.sql.SQLException;
+
 import org.apache.log4j.Logger;
 
 import com.accesso.challengeladder.controller.EmailController;
 import com.accesso.challengeladder.controller.LoginController;
 import com.accesso.challengeladder.controller.MatchController;
-import com.accesso.challengeladder.controller.MatchDetailsController;
 import com.accesso.challengeladder.controller.RankingController;
 import com.accesso.challengeladder.controller.RankingHistoryController;
 import com.accesso.challengeladder.controller.UserController;
-
 import com.accesso.challengeladder.utils.CorsFilters;
 
 public class Main
@@ -26,19 +25,17 @@ public class Main
 
 		CorsFilters.apply();
 
-        new EmailController();
+		new EmailController();
 
-        new LoginController();
+		new LoginController();
 
-        new MatchController();
-
-        new MatchDetailsController();
+		new MatchController();
 
 		new RankingController();
 
 		new RankingHistoryController();
 
-        new UserController();
+		new UserController();
 
-    }
+	}
 }
