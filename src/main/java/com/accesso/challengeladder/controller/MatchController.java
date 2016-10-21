@@ -23,18 +23,16 @@ public class MatchController
         MatchService matchService = new MatchService();
 
         get("/matches", (req, res) -> {
-            List<Match> rankings = matchService.getAllMatches();
+            List<Match> rankings = matchService.getAllMatches(
+                    req.queryParams("limit"),
+                    req.queryParams("page")
+                    );
             return JsonUtil.toJson(rankings);
         });
 
         // get information about a match
         get("/matches/:id", (req, res) -> {
             return JsonUtil.toJson(matchService.getMatch(req.params(":id")));
-        });
-
-        // get information of recent matches
-        get("/recent_matches/:limit", (req, res) -> {
-            return JsonUtil.toJson(matchService.getRecentMatches(Integer.valueOf(req.params(":limit"))));
         });
 
         // get all users in a match

@@ -228,17 +228,18 @@ public class MatchService
         return match;
     }
 
-    public List<Match> getAllMatches() throws SQLException
-    {
-        List<Match> matchList = matchDao.queryForAll();
-        return matchList;
-    }
-
-    public List<Match> getRecentMatches(int limit) throws SQLException
+    public List<Match> getAllMatches(String limit, String page) throws SQLException
     {
         QueryBuilder<Match, String> qb = matchDao.queryBuilder();
         qb.orderBy("match_timestamp", false);
-        qb.limit(Long.valueOf(limit));
+        if (limit != null)
+        {
+            qb.limit(Long.valueOf(limit));
+            if (page != null)
+            {
+                qb.offset(Long.valueOf(limit) * Long.valueOf(page));
+            }
+        }
         List<Match> matchList = qb.query();
 
         for (Match m : matchList)
