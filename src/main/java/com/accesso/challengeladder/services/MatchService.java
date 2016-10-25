@@ -1,12 +1,5 @@
 package com.accesso.challengeladder.services;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.Date;
-import java.util.List;
-
-import org.apache.log4j.Logger;
-
 import com.accesso.challengeladder.model.Match;
 import com.accesso.challengeladder.model.MatchStatus;
 import com.accesso.challengeladder.model.User;
@@ -16,6 +9,12 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.support.ConnectionSource;
+import org.apache.log4j.Logger;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Date;
+import java.util.List;
 
 public class MatchService
 {
@@ -137,28 +136,27 @@ public class MatchService
 		return match;
 	}
 
-    public List<Match> getAllMatches(String limit, String page) throws SQLException
-    {
-        QueryBuilder<Match, String> qb = matchDao.queryBuilder();
-        qb.orderBy("match_timestamp", false);
-        if (limit != null)
-        {
-            qb.limit(Long.valueOf(limit));
-            if (page != null)
-            {
-                qb.offset(Long.valueOf(limit) * Long.valueOf(page));
-            }
-        }
-        List<Match> matchList = qb.query();
+	public List<Match> getAllMatches(String limit, String page) throws SQLException
+	{
+		// default limit to 20, and page to 0
+		Long lim = limit == null ? (long) 20 : Long.valueOf(limit);
+		Long p = page == null ? (long) 0 : Long.valueOf(page);
 
-        for (Match m : matchList)
-        {
-            userDao.refresh(m.getCreatorUser());
-            userDao.refresh(m.getOpponentUser());
-        }
-        return matchList;
+		QueryBuilder<Match, String> qb = matchDao.queryBuilder();
+		qb.orderBy("match_timestamp", false);
+		qb.limit(lim);
+		qb.offset(lim * p);
 
-    }
+		List<Match> matchList = qb.query();
+
+		for (Match m : matchList)
+		{
+			userDao.refresh(m.getCreatorUser());
+			userDao.refresh(m.getOpponentUser());
+		}
+		return matchList;
+
+	}
 
 	public List<Match> getMatchesByUser(User user) throws SQLException
 	{
