@@ -36,12 +36,14 @@ table tr:nth-child(even) {
   <div class="fixed" ng-controller="rankCtrl">
     <h1>accesso Ping Pong Ladder <a href="rules.html">(Rules)</a></h1>
     <table>
-      <tbody>
+      <thead>
       <tr>
         <th>Rank</th>
         <th>Name</th>
         <th>Email</th>
       </tr>
+      </thead>
+      <tbody>
       <tr ng-repeat="x in players">
         <td>{{ $index+1 }}</td>
         <td>{{ x.user.name }}</td>
@@ -56,7 +58,7 @@ table tr:nth-child(even) {
   <div class="flex-item" ng-controller="matchCtrl">
     <h1>Recent Matches</h1>
     <table>
-      <tbody>
+      <thead>
       <tr>
         <th>Match Time</th>
         <th>Challenger</th>
@@ -64,6 +66,8 @@ table tr:nth-child(even) {
         <th>Winner</th>
         <th>Result</th>
       </tr>
+      </thead>
+      <tbody>
       <tr ng-repeat="x in matches">
         <td>{{x.matchTimestamp}}</td>
         <td>{{x.creatorUser.name}}</td>
@@ -75,7 +79,6 @@ table tr:nth-child(even) {
     </table>
   </div>
 </div>
-<div ng-app="myApp" ng-controller="rankCtrl">
 
 <script>
 var app = angular.module('myApp', []);
