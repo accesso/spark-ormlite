@@ -1,20 +1,19 @@
 package com.accesso.challengeladder.services;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.log4j.Logger;
-import org.mindrot.jbcrypt.BCrypt;
-
 import com.accesso.challengeladder.model.Match;
 import com.accesso.challengeladder.model.User;
 import com.accesso.challengeladder.utils.DBHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.support.ConnectionSource;
+import org.apache.log4j.Logger;
+import org.mindrot.jbcrypt.BCrypt;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class UserService
 {

@@ -23,10 +23,13 @@ public class MatchController
 	{
 		MatchService matchService = new MatchService();
 
-		get("/matches", (req, res) -> {
-			List<Match> rankings = matchService.getAllMatches();
-			return JsonUtil.toJson(rankings);
-		});
+        get("/matches", (req, res) -> {
+            List<Match> rankings = matchService.getAllMatches(
+                    req.queryParams("limit"),
+                    req.queryParams("page")
+                    );
+            return JsonUtil.toJson(rankings);
+        });
 
 		// get information about a match
 		get("/matches/:id", (req, res) -> {

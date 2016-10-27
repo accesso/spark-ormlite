@@ -137,10 +137,26 @@ public class MatchService
 		return match;
 	}
 
-	public List<Match> getAllMatches() throws SQLException
+	public List<Match> getAllMatches(String limit, String page) throws SQLException
 	{
-		List<Match> matchList = matchDao.queryForAll();
+		// default limit to 20, and page to 0
+		Long lim = limit == null ? (long) Constants.DEFAULT_PAGINATION_LIMIT : Long.valueOf(limit);
+		Long p = page == null ? (long) 0 : Long.valueOf(page);
+
+		QueryBuilder<Match, String> qb = matchDao.queryBuilder();
+		qb.orderBy("match_timestamp", false);
+		qb.limit(lim);
+		qb.offset(lim * p);
+
+		List<Match> matchList = qb.query();
+
+		for (Match m : matchList)
+		{
+			userDao.refresh(m.getCreatorUser());
+			userDao.refresh(m.getOpponentUser());
+		}
 		return matchList;
+
 	}
 
 	public List<Match> getMatchesByUser(User user) throws SQLException
