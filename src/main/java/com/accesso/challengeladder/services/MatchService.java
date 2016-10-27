@@ -1,5 +1,12 @@
 package com.accesso.challengeladder.services;
 
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+
 import com.accesso.challengeladder.model.Match;
 import com.accesso.challengeladder.model.MatchStatus;
 import com.accesso.challengeladder.model.User;
@@ -9,12 +16,6 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.support.ConnectionSource;
-import org.apache.log4j.Logger;
-
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.Date;
-import java.util.List;
 
 public class MatchService
 {
@@ -139,7 +140,7 @@ public class MatchService
 	public List<Match> getAllMatches(String limit, String page) throws SQLException
 	{
 		// default limit to 20, and page to 0
-		Long lim = limit == null ? (long) 20 : Long.valueOf(limit);
+		Long lim = limit == null ? (long) Constants.DEFAULT_PAGINATION_LIMIT : Long.valueOf(limit);
 		Long p = page == null ? (long) 0 : Long.valueOf(page);
 
 		QueryBuilder<Match, String> qb = matchDao.queryBuilder();
