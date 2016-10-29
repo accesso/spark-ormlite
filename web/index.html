@@ -16,11 +16,11 @@
   <div class="row">
     <div class="col-lg-12" ng-controller="loginCtrl">
     <h1 class="text-center">accesso Ping Pong Ladder&nbsp;<a href="rules.html">(Rules)</a></h1>
-      <div class="pull-right" ng-hide="loggedInUser" ng-cloak>
-        <input ng-model="loginForm.username" placeholder="username" type="text"/>
-        <input ng-model="loginForm.password" placeholder="password" type="password"/>
-        <button type="button" ng-click="login();" class="btn btn-success">Log In</button>
-      </div>
+      <form class="form form-inline pull-right" ng-submit="login();" ng-hide="loggedInUser" ng-cloak>
+        <input class="form-control" ng-model="loginForm.username" placeholder="username" type="text"/>
+        <input class="form-control" ng-model="loginForm.password" placeholder="password" type="password"/>
+        <button type="submit" class="btn btn-success">Log In</button>
+      </form>
         <div class="row" ng-show="loggedInUser" ng-cloak>
           <div class="col-md-2 col-xs-4">
             {{ (loggedInUser)? loggedInUser.name : '' }}
@@ -51,14 +51,25 @@
         <td>{{ player.user.name }}</td>
         <td>
             <div class="btn btn-primary"
-                 ng-click="createChallenge(player.user.id);"
-                 ng-show="loggedInUser != null && loggedInUser.rankId > player.id && loggedInUser.rankId - 3 <= player.id && !challenged(player.id)"
-                 ng-disabled="!canChallenge(player.id)"
+                 ng-click="!recentlyChallenged(player.user.id) && createChallenge(player.user.id);"
+                 ng-show="loggedIn() && canChallengeRank(player.id) && !challenged(player.user.id)"
+                 ng-disabled="loggedIn() && recentlyChallenged(player.user.id)"
                  ng-cloak>Challenge Player</div>
+            <input class="form-control"
+                   placeholder="Sets: {{loggedInUser.name}}"
+                   ng-model="player.creatorScore"
+                   type="number"
+                   ng-show="loggedIn() && canChallengeRank(player.id) && challenged(player.user.id)"
+                   ng-cloak/>
+            <input class="form-control"
+                   placeholder="Sets: {{player.user.name}}"
+                   ng-model="player.opponentScore"
+                   type="number"
+                   ng-show="loggedIn() && canChallengeRank(player.id) && challenged(player.user.id)"
+                   ng-cloak/>
             <div class="btn btn-success"
-                 ng-click="createChallenge(player.user.id);"
-                 ng-show="loggedInUser != null && loggedInUser.rankId > player.id && loggedInUser.rankId - 3 <= player.id && !challenged(player.id)"
-                 ng-disabled="!canChallenge(player.id)"
+                 ng-click="updateChallenge(player);"
+                 ng-show="loggedIn() && canChallengeRank(player.id) && challenged(player.user.id)"
                  ng-cloak>Report Match Result</div>
         </td>
       </tr>
@@ -129,7 +140,7 @@ var app = angular.module('myApp', []);
 var testURL = "http://192.168.2.46:4567";
 var localURL = "http://localhost:4567";
 app.baseURI = localURL;
-app.factory('loginService', function ($rootScope) {
+app.service('loginService', function ($rootScope) {
     this.loggedInUser = null;
 
     return {
@@ -147,28 +158,72 @@ app.controller('rankCtrl', function($scope, $http, loginService) {
     $scope.$on('LOGIN', function(response) {
         $scope.loggedInUser = loginService.getLoggedInUser();
         if ($scope.loggedInUser !== null) {
-            $http.get(app.baseURI+"/matches/user/challenges/"+$scope.loggedInUser.id)
-                    .then(function (response) {$scope.challenges = response.data; console.log($scope.challenges)});
+            $scope.getChallenges();
+            $scope.getMatches();
         }
     });
     $http.get(app.baseURI+"/ranking")
     .then(function (response) {$scope.players = response.data; console.log($scope.players)});
+    $scope.getChallenges = function() {
+        $http.get(app.baseURI+"/matches/user/challenges/"+$scope.loggedInUser.id)
+                .then(function (response) {$scope.challenges = response.data; console.log($scope.challenges)});
+
+    };
     $scope.createChallenge = function(opponentUserId) {
         $http.post(app.baseURI+"/matches", {
             "creatorUserId": $scope.loggedInUser.id,
             "opponentUserId": opponentUserId
         })
             .then(function (response) {
-                $scope.loginForm = {};
+                $scope.getChallenges();
+                $scope.getMatches();
+            });
+    };
+    $scope.updateChallenge = function(player) {
+        var foundMatchId = $scope.challenged(player.user.id);
+        $http.put(app.baseURI+"/matches/"+foundMatchId, {
+            "creatorScore": player.creatorScore,
+            "opponentScore": player.opponentScore
+        })
+            .then(function (response) {
+                $scope.getChallenges();
+                $scope.getMatches();
             });
     };
     $scope.challenged = function(opponentUserId) {
         // check challenges for player id
-        return true;
+        for (var challenge in $scope.challenges) {
+            if (opponentUserId == $scope.challenges[challenge].opponentUser.id) {
+                return $scope.challenges[challenge].id;
+            }
+        }
+        return false;
     };
-    $scope.canChallenge = function(opponentUserId) {
+    $scope.getMatches = function () {
+        $http.get(app.baseURI+"/matches?limit=10")
+            .then(function (response) {
+                $scope.matches = response.data;
+            });
+    };
+    $scope.loggedIn = function() {
+        return $scope.loggedInUser != null;
+    };
+    $scope.canChallengeRank = function(rank) {
+        return ($scope.loggedInUser.rankId > rank
+             && $scope.loggedInUser.rankId - 3 <= rank);
+    };
+    $scope.recentlyChallenged = function(opponentUserId) {
         // check match history for recent match using player id
-        return true;
+        var allowedToChallengeBefore = new Date();
+        allowedToChallengeBefore.setDate(allowedToChallengeBefore.getDate()-2);
+        for (var match in $scope.matches) {
+            var matchDate = new Date($scope.matches[match].matchTimestamp);
+            if (opponentUserId == $scope.matches[match].opponentUser.id
+                && allowedToChallengeBefore < matchDate) {
+                return $scope.matches[match].id;
+            }
+        }
+        return false;
     };
 });
 app.controller('matchCtrl', function($scope, $http, loginService) {

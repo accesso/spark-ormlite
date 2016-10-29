@@ -48,11 +48,11 @@ public class RankingService
 		List<Ranking> userRankingList = rankingDao.queryForEq("user_id", user.getId());
 		if (userRankingList.size() > 0)
 		{
-			return new Ranking();
+			return userRankingList.get(0);
 		}
 		else
 		{
-			return userRankingList.get(0);
+			return new Ranking();
 		}
 	}
 

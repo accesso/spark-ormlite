@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
+import com.accesso.challengeladder.model.Ranking;
 import com.j256.ormlite.stmt.Where;
 import org.apache.log4j.Logger;
 
@@ -103,6 +104,7 @@ public class MatchService
 				match.setVictorUser(match.getCreatorUser());
 				RankingService rankingService = new RankingService();
 				rankingService.swapRankings(match.getCreatorUser(), match.getOpponentUser(), matchId);
+				deleteInvalidPendingMatchesByUser(match.getCreatorUser());
 			}
 			else
 			{
@@ -169,7 +171,7 @@ public class MatchService
 					.or()
 					.eq("creator_user_id", user);
 		matchQBWhere.and();
-		matchQBWhere.isNotNull("victor_user_id");
+		matchQBWhere.eq("status_id", Constants.MATCH_STATUS_PENDING);
 		List<Match> matchList = matchQB.query();
 
 		for (Match m : matchList)
@@ -205,7 +207,7 @@ public class MatchService
 		matchQB.orderBy("match_timestamp", false);
 		matchQB.where().eq("creator_user_id", user)
 				.and()
-				.isNull("victor_user_id");
+				.eq("status_id", Constants.MATCH_STATUS_PENDING);
 		List<Match> matchList = matchQB.query();
 
 		for (Match m : matchList)
@@ -214,5 +216,44 @@ public class MatchService
 			userDao.refresh(m.getOpponentUser());
 		}
 		return matchList;
+	}
+
+	public void deleteInvalidPendingMatchesByUser(User user) throws SQLException
+	{
+		// remove matches that user has created and that are out of range
+
+		// remove matches that other users have created and that are now out of range
+
+		QueryBuilder<Match, String> matchQB = matchDao.queryBuilder();
+		matchQB.orderBy("match_timestamp", false);
+		Where<Match, String> matchQBWhere = matchQB.where();
+		matchQBWhere.eq("opponent_user_id", user)
+				.or()
+				.eq("creator_user_id", user);
+		matchQBWhere.and();
+		matchQBWhere.eq("status_id", Constants.MATCH_STATUS_PENDING);
+		List<Match> matchList = matchQB.query();
+
+		try
+		{
+			RankingService rankingService = new RankingService();
+			Ranking ranking = rankingService.getUserRanking(user);
+			for (Match m : matchList)
+			{
+				userDao.refresh(m.getCreatorUser());
+				userDao.refresh(m.getOpponentUser());
+				User opponentUser = (m.getOpponentUser().getId() == user.getId())? m.getCreatorUser() : m.getOpponentUser();
+				Ranking opponentRanking = rankingService.getUserRanking(opponentUser);
+				int rankDifference = Math.abs(opponentRanking.getId() - ranking.getId());
+				if (rankDifference > 3)
+				{
+					matchDao.delete(m);
+				}
+			}
+		}
+		catch (SQLException | IOException e)
+		{
+			logger.error(e);
+		}
 	}
 }
