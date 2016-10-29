@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
+import com.j256.ormlite.stmt.Where;
 import org.apache.log4j.Logger;
 
 import com.accesso.challengeladder.model.Match;
@@ -51,25 +52,6 @@ public class MatchService
 			return null;
 		}
 		return response;
-	}
-
-	public List<Match> getMatchesByUser(String userId)
-	{
-
-		List<Match> matches;
-		try
-		{
-			UserService userService = new UserService();
-			User user = userService.getUser(userId);
-
-			matches = getMatchesByUser(user);
-		}
-		catch (SQLException | IOException e)
-		{
-			logger.error(e);
-			return null;
-		}
-		return matches;
 	}
 
 	public Match createMatch(Integer creatorUserId, Integer opponentUserId)
@@ -159,12 +141,78 @@ public class MatchService
 
 	}
 
+	public List<Match> getMatchesByUser(String userId)
+	{
+
+		List<Match> matches;
+		try
+		{
+			UserService userService = new UserService();
+			User user = userService.getUser(userId);
+
+			matches = getMatchesByUser(user);
+		}
+		catch (SQLException | IOException e)
+		{
+			logger.error(e);
+			return null;
+		}
+		return matches;
+	}
+
 	public List<Match> getMatchesByUser(User user) throws SQLException
 	{
 		QueryBuilder<Match, String> matchQB = matchDao.queryBuilder();
-		matchQB.where().eq("opponent_user_id", user).or().eq("creator_user_id", user);
+		matchQB.orderBy("match_timestamp", false);
+		Where<Match, String> matchQBWhere = matchQB.where();
+		matchQBWhere.eq("opponent_user_id", user)
+					.or()
+					.eq("creator_user_id", user);
+		matchQBWhere.and();
+		matchQBWhere.isNotNull("victor_user_id");
 		List<Match> matchList = matchQB.query();
 
+		for (Match m : matchList)
+		{
+			userDao.refresh(m.getCreatorUser());
+			userDao.refresh(m.getOpponentUser());
+		}
+		return matchList;
+	}
+
+	public List<Match> getPendingMatchesByUser(String userId)
+	{
+
+		List<Match> matches;
+		try
+		{
+			UserService userService = new UserService();
+			User user = userService.getUser(userId);
+
+			matches = getPendingMatchesByUser(user);
+		}
+		catch (SQLException | IOException e)
+		{
+			logger.error(e);
+			return null;
+		}
+		return matches;
+	}
+
+	public List<Match> getPendingMatchesByUser(User user) throws SQLException
+	{
+		QueryBuilder<Match, String> matchQB = matchDao.queryBuilder();
+		matchQB.orderBy("match_timestamp", false);
+		matchQB.where().eq("creator_user_id", user)
+				.and()
+				.isNull("victor_user_id");
+		List<Match> matchList = matchQB.query();
+
+		for (Match m : matchList)
+		{
+			userDao.refresh(m.getCreatorUser());
+			userDao.refresh(m.getOpponentUser());
+		}
 		return matchList;
 	}
 }

@@ -1,6 +1,7 @@
 package com.accesso.challengeladder.services;
 
 import com.accesso.challengeladder.model.Match;
+import com.accesso.challengeladder.model.Ranking;
 import com.accesso.challengeladder.model.User;
 import com.accesso.challengeladder.utils.DBHelper;
 import com.j256.ormlite.dao.Dao;
@@ -89,6 +90,7 @@ public class UserService
 		{
 			user = userDao.queryForId(userId);
 			user = populateUserWinsLosses(user);
+			user = populateUserRankId(user);
 		}
 
 		return user;
@@ -177,6 +179,36 @@ public class UserService
 
 			user.setNumWins(numWins);
 			user.setNumLosses(numLosses);
+
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+		return user;
+	}
+
+	/**
+	 * Queries for the rank id and sets it on the User object
+	 *
+	 * @param user
+	 * @throws SQLException
+	 * @throws IOException
+	 */
+	public User populateUserRankId(User user)
+	{
+		RankingService rankingService;
+		try
+		{
+			rankingService = new RankingService();
+
+			Ranking ranking = rankingService.getUserRanking(user);
+
+			user.setRankId(ranking.getId());
 
 		}
 		catch (IOException e)

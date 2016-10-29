@@ -40,6 +40,10 @@ public class MatchController
 			return JsonUtil.toJson(matchService.getMatchesByUser(req.params(":id")));
 		});
 
+		get("/matches/user/challenges/:id", (req, res) -> {
+			return JsonUtil.toJson(matchService.getPendingMatchesByUser(req.params(":id")));
+		});
+
 		post("/matches", (req, res) -> {
 			PostMatchesRequest postMatchesRequest = new Gson().fromJson(req.body(), PostMatchesRequest.class);
 

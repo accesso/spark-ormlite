@@ -32,6 +32,8 @@ public class User
 
     private int numLosses;
 
+    private int rankId;
+
     public User()
     {
         // ORMLite needs a no-arg constructor
@@ -125,5 +127,15 @@ public class User
     public void setNumWins(int numWins)
     {
         this.numWins = numWins;
+    }
+
+    public int getRankId()
+    {
+        return rankId;
+    }
+
+    public void setRankId(int rankId)
+    {
+        this.rankId = rankId;
     }
 }

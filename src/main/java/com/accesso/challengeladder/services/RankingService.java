@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
+import com.j256.ormlite.stmt.QueryBuilder;
 import org.apache.log4j.Logger;
 
 import com.accesso.challengeladder.model.Ranking;
@@ -40,6 +41,19 @@ public class RankingService
 		}
 
 		return rankList;
+	}
+
+	public Ranking getUserRanking(User user) throws SQLException
+	{
+		List<Ranking> userRankingList = rankingDao.queryForEq("user_id", user.getId());
+		if (userRankingList.size() > 0)
+		{
+			return new Ranking();
+		}
+		else
+		{
+			return userRankingList.get(0);
+		}
 	}
 
 	public Ranking createRanking(String userId) throws SQLException
