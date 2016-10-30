@@ -64,15 +64,16 @@ public class MatchService
 		newMatch.setVictorUser(null);
 		try
 		{
-			newMatch.setCreatorUser(userDao.queryForId(creatorUserId.toString()));
-			newMatch.setOpponentUser(userDao.queryForId(opponentUserId.toString()));
+			UserService userService = new UserService();
+			newMatch.setCreatorUser(userService.getUser(creatorUserId.toString()));
+			newMatch.setOpponentUser(userService.getUser(opponentUserId.toString()));
 			newMatch.setMatchStatus(matchStatusDao.queryForId(Constants.MATCH_STATUS_PENDING));
-			EmailService.sendChallengeCreatedEmails(newMatch);
 			matchDao.create(newMatch);
+			EmailService.sendChallengeCreatedEmails(newMatch);
 		}
-		catch (SQLException sqle)
+		catch (IOException | SQLException e)
 		{
-			logger.error(sqle);
+			logger.error(e);
 			return null;
 		}
 		return newMatch;
@@ -100,22 +101,28 @@ public class MatchService
 			match.setMatchTimestamp(new Date());
 			match.setMatchStatus(matchStatusDao.queryForId(Constants.MATCH_STATUS_COMPLETED));
 
-			if (creatorScore > opponentScore)
-			{
-				match.setVictorUser(match.getCreatorUser());
-				RankingService rankingService = new RankingService();
-				rankingService.swapRankings(match.getCreatorUser(), match.getOpponentUser(), matchId);
-			}
-			else
-			{
-				match.setVictorUser(match.getOpponentUser());
-			}
-
+			RankingService rankingService = new RankingService();
 			userDao.refresh(match.getCreatorUser());
 			userDao.refresh(match.getOpponentUser());
 			userDao.refresh(match.getVictorUser());
-			EmailService.sendChallengeCompletedEmails(match);
-			deleteInvalidPendingMatchesByUser(match.getCreatorUser());
+			Ranking creatorRanking = rankingService.getUserRanking(match.getCreatorUser());
+			Ranking opponentRanking = rankingService.getUserRanking(match.getOpponentUser());
+			match.getCreatorUser().setRankId(creatorRanking.getId());
+			match.getOpponentUser().setRankId(opponentRanking.getId());
+
+			if (creatorScore > opponentScore)
+			{
+				match.setVictorUser(match.getCreatorUser());
+				EmailService.sendChallengeCompletedEmails(match);
+				rankingService.swapRankings(match.getCreatorUser(), match.getOpponentUser(), matchId);
+				deleteInvalidPendingMatchesByUser(match.getCreatorUser());
+				deleteInvalidPendingMatchesByUser(match.getOpponentUser());
+			}
+			else
+			{
+				EmailService.sendChallengeCompletedEmails(match);
+				match.setVictorUser(match.getOpponentUser());
+			}
 
 			matchDao.update(match);
 		}
@@ -226,10 +233,6 @@ public class MatchService
 
 	public void deleteInvalidPendingMatchesByUser(User user) throws SQLException
 	{
-		// remove matches that user has created and that are out of range
-
-		// remove matches that other users have created and that are now out of range
-
 		QueryBuilder<Match, String> matchQB = matchDao.queryBuilder();
 		matchQB.orderBy("match_timestamp", false);
 		Where<Match, String> matchQBWhere = matchQB.where();
@@ -261,6 +264,8 @@ public class MatchService
 					opponentRanking = ranking;
 				}
 				if (opponentRanking.getId() - 3 > creatorRanking.getId()) {
+					m.getCreatorUser().setRankId(creatorRanking.getId());
+					m.getOpponentUser().setRankId(opponentRanking.getId());
 					EmailService.sendChallengeRevokedEmails(m);
 					matchDao.delete(m);
 				}

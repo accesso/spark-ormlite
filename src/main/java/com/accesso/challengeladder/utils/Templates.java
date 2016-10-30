@@ -21,11 +21,11 @@ public class Templates
 
 	public static String getChallengeCreatedTemplate(Match match)
 	{
-			String template = "<div>"
+		String template = "<div>"
 			+ "(" + match.getCreatorUser().getRankId() + ") "
 			+ match.getCreatorUser().getName()
 			+ " challenged ("
-			+ match.getOpponentUser().getRankId() + ")"
+			+ match.getOpponentUser().getRankId() + ") "
 			+ match.getOpponentUser().getName()
 			+ "</div>";
 		template += getContactFooter();
@@ -34,15 +34,27 @@ public class Templates
 
 	public static String getChallengeRevokedTemplate(Match match)
 	{
-			String template = "<div>"
-				+ "Challenge from "
-				+ "(" + match.getCreatorUser().getRankId() + ") "
-				+ match.getCreatorUser().getName()
-				+ " to ("
-				+ match.getOpponentUser().getRankId() + ")"
-				+ match.getOpponentUser().getName()
-				+ " has been revoked!"
-				+ "</div>";
+		String template = "<div>"
+			+ "Challenge between "
+			+ match.getCreatorUser().getName()
+			+ " and "
+			+ match.getOpponentUser().getName()
+			+ " has been revoked!"
+			+ "</div>"
+			+ "<br>"
+			+ "<div>"
+			+ "New Ranks:"
+			+ "</div>"
+			+ "<br>"
+			+ "<div>"
+			+ match.getCreatorUser().getName()
+			+ ": " + match.getCreatorUser().getRankId()
+			+ "</div>"
+			+ "<br>"
+			+ "<div>"
+			+ match.getOpponentUser().getName()
+			+ ": " + match.getOpponentUser().getRankId()
+			+ "</div>";
 		template += getContactFooter();
 		return template;
 	}
@@ -54,7 +66,7 @@ public class Templates
 			+ "(" + match.getCreatorUser().getRankId() + ") "
 			+ match.getCreatorUser().getName()
 			+ " challenged ("
-			+ match.getOpponentUser().getRankId() + ")"
+			+ match.getOpponentUser().getRankId() + ") "
 			+ match.getOpponentUser().getName()
 			+ "</div>"
 			+ "<br>"
@@ -74,12 +86,12 @@ public class Templates
 		{
 			template +=
 				match.getOpponentUser().getName()
-					+ " def "
-					+ match.getCreatorUser().getName()
-					+ ", "
-					+ match.getOpponentScore()
-					+ "-"
-					+ match.getCreatorScore();
+				+ " def "
+				+ match.getCreatorUser().getName()
+				+ ", "
+				+ match.getOpponentScore()
+				+ "-"
+				+ match.getCreatorScore();
 		}
 		template += "</div>";
 		template += getContactFooter();
