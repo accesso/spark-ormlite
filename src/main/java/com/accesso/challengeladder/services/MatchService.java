@@ -67,6 +67,7 @@ public class MatchService
 			newMatch.setCreatorUser(userDao.queryForId(creatorUserId.toString()));
 			newMatch.setOpponentUser(userDao.queryForId(opponentUserId.toString()));
 			newMatch.setMatchStatus(matchStatusDao.queryForId(Constants.MATCH_STATUS_PENDING));
+			EmailService.sendChallengeCreatedEmails(newMatch);
 			matchDao.create(newMatch);
 		}
 		catch (SQLException sqle)
@@ -104,12 +105,17 @@ public class MatchService
 				match.setVictorUser(match.getCreatorUser());
 				RankingService rankingService = new RankingService();
 				rankingService.swapRankings(match.getCreatorUser(), match.getOpponentUser(), matchId);
-				deleteInvalidPendingMatchesByUser(match.getCreatorUser());
 			}
 			else
 			{
 				match.setVictorUser(match.getOpponentUser());
 			}
+
+			userDao.refresh(match.getCreatorUser());
+			userDao.refresh(match.getOpponentUser());
+			userDao.refresh(match.getVictorUser());
+			EmailService.sendChallengeCompletedEmails(match);
+			deleteInvalidPendingMatchesByUser(match.getCreatorUser());
 
 			matchDao.update(match);
 		}
@@ -171,7 +177,7 @@ public class MatchService
 					.or()
 					.eq("creator_user_id", user);
 		matchQBWhere.and();
-		matchQBWhere.eq("status_id", Constants.MATCH_STATUS_PENDING);
+		matchQBWhere.eq("status_id", Constants.MATCH_STATUS_COMPLETED);
 		List<Match> matchList = matchQB.query();
 
 		for (Match m : matchList)
@@ -242,11 +248,20 @@ public class MatchService
 			{
 				userDao.refresh(m.getCreatorUser());
 				userDao.refresh(m.getOpponentUser());
-				User opponentUser = (m.getOpponentUser().getId() == user.getId())? m.getCreatorUser() : m.getOpponentUser();
-				Ranking opponentRanking = rankingService.getUserRanking(opponentUser);
-				int rankDifference = Math.abs(opponentRanking.getId() - ranking.getId());
-				if (rankDifference > 3)
+				Ranking creatorRanking;
+				Ranking opponentRanking;
+				if (m.getCreatorUser().getId() == user.getId())
 				{
+					creatorRanking = ranking;
+					opponentRanking = rankingService.getUserRanking(m.getOpponentUser());
+				}
+				else
+				{
+					creatorRanking = rankingService.getUserRanking(m.getCreatorUser());
+					opponentRanking = ranking;
+				}
+				if (opponentRanking.getId() - 3 > creatorRanking.getId()) {
+					EmailService.sendChallengeRevokedEmails(m);
 					matchDao.delete(m);
 				}
 			}
