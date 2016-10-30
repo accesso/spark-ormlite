@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.j256.ormlite.stmt.QueryBuilder;
 import org.apache.log4j.Logger;
 
 import com.accesso.challengeladder.model.Ranking;

@@ -15,7 +15,7 @@
 <div class="container" ng-app="myApp">
   <div class="row">
     <div class="col-lg-12" ng-controller="loginCtrl">
-    <h1 class="text-center">accesso Ping Pong Ladder&nbsp;<a href="rules.html">(Rules)</a></h1>
+    <h1 class="text-center">accesso Ping Pong Ladder&nbsp;<a href="rules.html" target="_blank">(Rules)</a></h1>
       <form class="form form-inline pull-right" ng-submit="login();" ng-hide="loggedInUser" ng-cloak>
         <input class="form-control" ng-model="loginForm.username" placeholder="username" type="text"/>
         <input class="form-control" ng-model="loginForm.password" placeholder="password" type="password"/>
@@ -26,9 +26,12 @@
             {{ (loggedInUser)? loggedInUser.name : '' }}
           </div>
           <div class="col-md-2 col-xs-4">
+              Rank {{ (loggedInUser)? loggedInUser.rankId : '' }}
+          </div>
+          <div class="col-md-2 col-xs-4">
               {{ (loggedInUser)? loggedInUser.numWins : '' }} Wins, {{ (loggedInUser)? loggedInUser.numLosses : '' }} Losses
           </div>
-          <div class="col-md-2 col-md-offset-6 col-xs-4 btn btn-danger" ng-click="logout();">
+          <div class="col-md-2 col-md-offset-4 col-xs-4 btn btn-danger" ng-click="logout();">
               Log Out
           </div>
         </div>
@@ -77,7 +80,7 @@
     </table>
     </div>
 
-      <div class="col-lg-6" ng-controller="matchCtrl">
+      <div class="col-lg-6" ng-controller="matchCtrl" ng-init="getMatches();">
         <h1>Recent Matches</h1>
         <table class="table table-responsive" style="white-space: nowrap;">
           <thead>
@@ -230,18 +233,21 @@ app.controller('matchCtrl', function($scope, $http, loginService) {
     $scope.loggedInUser = loginService.getLoggedInUser();
     $scope.$on('LOGIN', function(response) {
         $scope.loggedInUser = loginService.getLoggedInUser();
+        $scope.getMatches();
     });
 
-    $http.get(app.baseURI+"/matches?limit=10")
-    .then(function (response) {$scope.matches = response.data; console.log($scope.matches)});
+    $scope.getMatches = function () {
+        $http.get(app.baseURI+"/matches?limit=10")
+            .then(function (response) {$scope.matches = response.data; console.log($scope.matches)});
+    };
 });
 app.controller('userMatchCtrl', function($scope, $http, loginService) {
     $scope.loggedInUser = loginService.getLoggedInUser();
     $scope.$on('LOGIN', function(response) {
         $scope.loggedInUser = loginService.getLoggedInUser();
         if ($scope.loggedInUser !== null) {
-        $http.get(app.baseURI+"/matches/user/"+$scope.loggedInUser.id)
-            .then(function (response) {$scope.matches = response.data; console.log($scope.matches)});
+            $http.get(app.baseURI+"/matches/user/"+$scope.loggedInUser.id)
+                .then(function (response) {$scope.matches = response.data; console.log($scope.matches)});
         }
     });
 
@@ -253,12 +259,12 @@ app.controller('loginCtrl', function($scope, $http, loginService) {
     });
     $scope.loginForm = {};
     $scope.login = function() {
-//        $http.post(app.baseURI+"/login", $scope.loginForm)
-//        .then(function (response) {
-//            loginService.setLoggedInUser(response.data);
-//            $scope.loginForm = {};
-//        });
-        loginService.setLoggedInUser({"id":21,"name":"John Fonte","email":"john.fonte@accesso.com","adminFlag":"1","activeFlag":"1","numWins":4,"numLosses":5,"rankId":25});
+        $http.post(app.baseURI+"/login", $scope.loginForm)
+        .then(function (response) {
+            loginService.setLoggedInUser(response.data);
+            $scope.loginForm = {};
+        });
+//        loginService.setLoggedInUser({"id":21,"name":"John Fonte","email":"john.fonte@accesso.com","adminFlag":"1","activeFlag":"1","numWins":4,"numLosses":5,"rankId":25});
         $scope.loginForm = {};
     };
     $scope.logout = function() {
