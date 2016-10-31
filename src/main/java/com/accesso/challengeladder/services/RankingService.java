@@ -42,9 +42,19 @@ public class RankingService
 		return rankList;
 	}
 
+	public Ranking getUserRanking(String userId) throws SQLException
+	{
+		return getUserRanking(Integer.parseInt(userId));
+	}
+
 	public Ranking getUserRanking(User user) throws SQLException
 	{
-		List<Ranking> userRankingList = rankingDao.queryForEq("user_id", user.getId());
+		return getUserRanking(user.getId());
+	}
+
+	public Ranking getUserRanking(int userId) throws SQLException
+	{
+		List<Ranking> userRankingList = rankingDao.queryForEq("user_id", userId);
 		if (userRankingList.size() > 0)
 		{
 			return userRankingList.get(0);

@@ -37,11 +37,7 @@ public class MatchController
 		});
 
 		get("/matches/user/:id", (req, res) -> {
-			return JsonUtil.toJson(matchService.getMatchesByUser(req.params(":id")));
-		});
-
-		get("/matches/user/challenges/:id", (req, res) -> {
-			return JsonUtil.toJson(matchService.getPendingMatchesByUser(req.params(":id")));
+			return JsonUtil.toJson(matchService.getMatchesByUser(req.params(":id"), req.queryParams("statusId")));
 		});
 
 		post("/matches", (req, res) -> {

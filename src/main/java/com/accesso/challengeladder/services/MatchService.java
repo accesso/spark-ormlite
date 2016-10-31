@@ -115,8 +115,6 @@ public class MatchService
 				match.setVictorUser(match.getCreatorUser());
 				EmailService.sendChallengeCompletedEmails(match);
 				rankingService.swapRankings(match.getCreatorUser(), match.getOpponentUser(), matchId);
-				deleteInvalidPendingMatchesByUser(match.getCreatorUser());
-				deleteInvalidPendingMatchesByUser(match.getOpponentUser());
 			}
 			else
 			{
@@ -125,6 +123,8 @@ public class MatchService
 			}
 
 			matchDao.update(match);
+			deleteInvalidPendingMatchesByUser(match.getCreatorUser());
+			deleteInvalidPendingMatchesByUser(match.getOpponentUser());
 		}
 		catch (Exception e)
 		{
@@ -156,7 +156,7 @@ public class MatchService
 
 	}
 
-	public List<Match> getMatchesByUser(String userId)
+	public List<Match> getMatchesByUser(String userId, String statusId)
 	{
 
 		List<Match> matches;
@@ -165,9 +165,9 @@ public class MatchService
 			UserService userService = new UserService();
 			User user = userService.getUser(userId);
 
-			matches = getMatchesByUser(user);
+			matches = getMatchesByUser(user, statusId);
 		}
-		catch (SQLException | IOException e)
+		catch (SQLException | NumberFormatException | IOException e)
 		{
 			logger.error(e);
 			return null;
@@ -177,6 +177,17 @@ public class MatchService
 
 	public List<Match> getMatchesByUser(User user) throws SQLException
 	{
+		return getMatchesByUser(user, null);
+	}
+
+	public List<Match> getMatchesByUser(User user, String statusId) throws SQLException
+	{
+		if (!Constants.MATCH_STATUS_COMPLETED.equals(statusId)
+			&& !Constants.MATCH_STATUS_PENDING.equals(statusId))
+		{
+			statusId = Constants.MATCH_STATUS_COMPLETED;
+		}
+
 		QueryBuilder<Match, String> matchQB = matchDao.queryBuilder();
 		matchQB.orderBy("match_timestamp", false);
 		Where<Match, String> matchQBWhere = matchQB.where();
@@ -184,43 +195,7 @@ public class MatchService
 					.or()
 					.eq("creator_user_id", user);
 		matchQBWhere.and();
-		matchQBWhere.eq("status_id", Constants.MATCH_STATUS_COMPLETED);
-		List<Match> matchList = matchQB.query();
-
-		for (Match m : matchList)
-		{
-			userDao.refresh(m.getCreatorUser());
-			userDao.refresh(m.getOpponentUser());
-		}
-		return matchList;
-	}
-
-	public List<Match> getPendingMatchesByUser(String userId)
-	{
-
-		List<Match> matches;
-		try
-		{
-			UserService userService = new UserService();
-			User user = userService.getUser(userId);
-
-			matches = getPendingMatchesByUser(user);
-		}
-		catch (SQLException | IOException e)
-		{
-			logger.error(e);
-			return null;
-		}
-		return matches;
-	}
-
-	public List<Match> getPendingMatchesByUser(User user) throws SQLException
-	{
-		QueryBuilder<Match, String> matchQB = matchDao.queryBuilder();
-		matchQB.orderBy("match_timestamp", false);
-		matchQB.where().eq("creator_user_id", user)
-				.and()
-				.eq("status_id", Constants.MATCH_STATUS_PENDING);
+		matchQBWhere.eq("status_id", statusId);
 		List<Match> matchList = matchQB.query();
 
 		for (Match m : matchList)
@@ -263,7 +238,7 @@ public class MatchService
 					creatorRanking = rankingService.getUserRanking(m.getCreatorUser());
 					opponentRanking = ranking;
 				}
-				if (opponentRanking.getId() - 3 > creatorRanking.getId()) {
+				if (creatorRanking.getId() - 3 > opponentRanking.getId()) {
 					m.getCreatorUser().setRankId(creatorRanking.getId());
 					m.getOpponentUser().setRankId(opponentRanking.getId());
 					EmailService.sendChallengeRevokedEmails(m);

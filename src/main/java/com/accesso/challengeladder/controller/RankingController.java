@@ -22,6 +22,11 @@ public class RankingController
             return JsonUtil.toJson(rankings);
         });
 
+        get("/ranking/user/:id", (req, res) -> {
+            Ranking ranking = rankingService.getUserRanking(req.params("id"));
+            return JsonUtil.toJson(ranking);
+        });
+
         post("/ranking", (req, res) -> rankingService.createRanking(req.queryParams("userId")), JsonUtil.json());
     }
 }

@@ -31,14 +31,17 @@
           <div class="col-md-2 col-xs-4">
               {{ (loggedInUser)? loggedInUser.numWins : '' }} Wins, {{ (loggedInUser)? loggedInUser.numLosses : '' }} Losses
           </div>
-          <div class="col-md-2 col-md-offset-4 col-xs-4 btn btn-danger" ng-click="logout();">
+          <div class="col-md-2 col-xs-4 btn btn-info" ng-click="refresh();">
+              Refresh Page
+          </div>
+          <div class="col-md-2 col-md-offset-2 col-xs-4 btn btn-danger" ng-click="logout();">
               Log Out
           </div>
         </div>
     </div>
   </div>
   <div class="row">
-    <div class="col-lg-6" ng-controller="rankCtrl">
+    <div class="col-lg-6" ng-controller="rankCtrl" ng-init="getRankings();">
     <h1>Ladder</h1>
     <table class="table table-responsive" style="white-space: nowrap;">
       <thead>
@@ -49,30 +52,48 @@
       </tr>
       </thead>
       <tbody>
-      <tr ng-repeat="player in players">
+      <tr ng-repeat="player in players" ng-class="{ 'success' : loggedIn() && player.user.id == loggedInUser.id }">
         <td>{{ $index+1 }}</td>
         <td>{{ player.user.name }}</td>
         <td>
             <div class="btn btn-primary"
                  ng-click="!recentlyChallenged(player.user.id) && createChallenge(player.user.id);"
-                 ng-show="loggedIn() && canChallengeRank(player.id) && !challenged(player.user.id)"
+                 ng-show="loggedIn() && canChallengeRank(player.id) && !challengedOpponent(player.user.id)"
                  ng-disabled="loggedIn() && recentlyChallenged(player.user.id)"
                  ng-cloak>Challenge Player</div>
+
+            <input class="form-control"
+                   placeholder="Sets: {{loggedInUser.name}}"
+                   ng-model="player.opponentScore"
+                   type="number"
+                   ng-show="loggedIn() && challengedByCreator(player.user.id)"
+                   ng-cloak/>
+            <input class="form-control"
+                   placeholder="Sets: {{player.user.name}}"
+                   ng-model="player.creatorScore"
+                   type="number"
+                   ng-show="loggedIn() && challengedByCreator(player.user.id)"
+                   ng-cloak/>
+            <div class="btn btn-warning"
+                 ng-click="updateChallenge(player);"
+                 ng-show="loggedIn() && challengedByCreator(player.user.id)"
+                 ng-cloak>Report Match Result</div>
+
             <input class="form-control"
                    placeholder="Sets: {{loggedInUser.name}}"
                    ng-model="player.creatorScore"
                    type="number"
-                   ng-show="loggedIn() && canChallengeRank(player.id) && challenged(player.user.id)"
+                   ng-show="loggedIn() && canChallengeRank(player.id) && challengedOpponent(player.user.id)"
                    ng-cloak/>
             <input class="form-control"
                    placeholder="Sets: {{player.user.name}}"
                    ng-model="player.opponentScore"
                    type="number"
-                   ng-show="loggedIn() && canChallengeRank(player.id) && challenged(player.user.id)"
+                   ng-show="loggedIn() && canChallengeRank(player.id) && challengedOpponent(player.user.id)"
                    ng-cloak/>
             <div class="btn btn-success"
                  ng-click="updateChallenge(player);"
-                 ng-show="loggedIn() && canChallengeRank(player.id) && challenged(player.user.id)"
+                 ng-show="loggedIn() && canChallengeRank(player.id) && challengedOpponent(player.user.id)"
                  ng-cloak>Report Match Result</div>
         </td>
       </tr>
@@ -161,14 +182,18 @@ app.controller('rankCtrl', function($scope, $http, loginService) {
     $scope.$on('LOGIN', function(response) {
         $scope.loggedInUser = loginService.getLoggedInUser();
         if ($scope.loggedInUser !== null) {
+            $scope.getRankings();
             $scope.getChallenges();
             $scope.getMatches();
         }
     });
-    $http.get(app.baseURI+"/ranking")
-    .then(function (response) {$scope.players = response.data; console.log($scope.players)});
+    $scope.getRankings = function() {
+        $http.get(app.baseURI+"/ranking")
+                .then(function (response) {$scope.players = response.data; console.log($scope.players)
+        });
+    };
     $scope.getChallenges = function() {
-        $http.get(app.baseURI+"/matches/user/challenges/"+$scope.loggedInUser.id)
+        $http.get(app.baseURI+"/matches/user/"+$scope.loggedInUser.id+"?statusId=1")
                 .then(function (response) {$scope.challenges = response.data; console.log($scope.challenges)});
 
     };
@@ -178,25 +203,39 @@ app.controller('rankCtrl', function($scope, $http, loginService) {
             "opponentUserId": opponentUserId
         })
             .then(function (response) {
+                $scope.getRankings();
                 $scope.getChallenges();
                 $scope.getMatches();
             });
     };
     $scope.updateChallenge = function(player) {
-        var foundMatchId = $scope.challenged(player.user.id);
+        var foundMatchId = $scope.challengedOpponent(player.user.id)
+                || $scope.challengedByCreator(player.user.id);
         $http.put(app.baseURI+"/matches/"+foundMatchId, {
             "creatorScore": player.creatorScore,
             "opponentScore": player.opponentScore
         })
             .then(function (response) {
+                $scope.getRankings();
                 $scope.getChallenges();
                 $scope.getMatches();
             });
     };
-    $scope.challenged = function(opponentUserId) {
+    $scope.challengedOpponent = function(opponentUserId) {
         // check challenges for player id
         for (var challenge in $scope.challenges) {
-            if (opponentUserId == $scope.challenges[challenge].opponentUser.id) {
+            if ($scope.challenges[challenge].creatorUser.id == $scope.loggedInUser.id
+                    && $scope.challenges[challenge].opponentUser.id == opponentUserId) {
+                return $scope.challenges[challenge].id;
+            }
+        }
+        return false;
+    };
+    $scope.challengedByCreator = function(creatorUserId) {
+        // check challenges for player id
+        for (var challenge in $scope.challenges) {
+            if ($scope.challenges[challenge].creatorUser.id == creatorUserId
+                    && $scope.challenges[challenge].opponentUser.id == $scope.loggedInUser.id) {
                 return $scope.challenges[challenge].id;
             }
         }
@@ -221,7 +260,11 @@ app.controller('rankCtrl', function($scope, $http, loginService) {
         allowedToChallengeBefore.setDate(allowedToChallengeBefore.getDate()-2);
         for (var match in $scope.matches) {
             var matchDate = new Date($scope.matches[match].matchTimestamp);
-            if (opponentUserId == $scope.matches[match].opponentUser.id
+            if (
+                ((opponentUserId == $scope.matches[match].opponentUser.id
+                && $scope.loggedInUser.id == $scope.matches[match].creatorUser.id)
+            ||  (opponentUserId == $scope.matches[match].creatorUser.id
+                && $scope.loggedInUser.id == $scope.matches[match].opponentUser.id))
                 && allowedToChallengeBefore < matchDate) {
                 return $scope.matches[match].id;
             }
@@ -256,6 +299,11 @@ app.controller('loginCtrl', function($scope, $http, loginService) {
     $scope.loggedInUser = loginService.getLoggedInUser();
     $scope.$on('LOGIN', function(response) {
         $scope.loggedInUser = loginService.getLoggedInUser();
+        if ($scope.loggedInUser !== null) {
+            setTimeout(function() {
+                $scope.refreshRanking();
+            }, 3000);
+        }
     });
     $scope.loginForm = {};
     $scope.login = function() {
@@ -270,6 +318,19 @@ app.controller('loginCtrl', function($scope, $http, loginService) {
     $scope.logout = function() {
         loginService.setLoggedInUser(null);
         $scope.loginForm = {};
+    };
+    $scope.refresh = function() {
+        loginService.setLoggedInUser(loginService.getLoggedInUser());
+    };
+    $scope.refreshRanking = function() {
+        $http.get(app.baseURI+"/ranking/user/"+$scope.loggedInUser.id)
+            .then(function (response) {
+                if ($scope.loggedInUser.rankId !== response.data.id) {
+                    $scope.loggedInUser.rankId = response.data.id;
+                    loginService.setLoggedInUser($scope.loggedInUser);
+                }
+                console.log(response.data);
+            });
     };
 });
 
