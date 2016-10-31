@@ -19,7 +19,7 @@ DECLARE dupe_match INT;
 SELECT rank_id FROM ranking WHERE user_id=creatorUserId INTO initial_creator_rank; 
 SELECT rank_id FROM ranking WHERE user_id=opponentUserId INTO initial_opponent_rank; 
 
-IF initial_creator_rank >= initial_opponent_rank 
+IF initial_creator_rank <= initial_opponent_rank 
 THEN signal SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid match, creator is higher rank'; 
 END IF; 
 
