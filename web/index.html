@@ -7,6 +7,11 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
+    <style type="text/css">
+        .bold {
+            font-weight: bold;
+        }
+    </style>
 <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
 <!--<script src="./static/js/bootstrap.min.js"></script>-->
 </head>
@@ -32,7 +37,7 @@
               {{ (loggedInUser)? loggedInUser.numWins : '' }} Wins, {{ (loggedInUser)? loggedInUser.numLosses : '' }} Losses
           </div>
           <div class="col-md-2 col-xs-4 btn btn-info" ng-click="refresh();">
-              Refresh Page
+              Refresh Ladder
           </div>
           <div class="col-md-2 col-md-offset-2 col-xs-4 btn btn-danger" ng-click="logout();">
               Log Out
@@ -54,7 +59,7 @@
       <tbody>
       <tr ng-repeat="player in players" ng-class="{ 'success' : loggedIn() && player.user.id == loggedInUser.id }">
         <td>{{ $index+1 }}</td>
-        <td>{{ player.user.name }}</td>
+        <td ng-class="{ 'bold' : loggedIn() && player.user.id == loggedInUser.id  }">{{ player.user.name }}</td>
         <td>
             <div class="btn btn-primary"
                  ng-click="!recentlyChallenged(player.user.id) && createChallenge(player.user.id);"
@@ -116,12 +121,14 @@
           <tr ng-repeat="match in matches">
             <td>{{match.matchTimestamp}}</td>
             <td ng-class="{ 'success' : match.creatorUser.id === match.victorUser.id,
-                            'danger' : match.creatorUser.id !== match.victorUser.id }">
+                            'danger' : match.creatorUser.id !== match.victorUser.id,
+                             'bold' : loggedInUser != null && match.creatorUser.id == loggedInUser.id }">
                 {{match.creatorUser.name}}
             </td>
             <td>{{match.creatorScore}} - {{match.opponentScore}}</td>
             <td ng-class="{ 'success' : match.opponentUser.id === match.victorUser.id,
-                            'danger' : match.opponentUser.id !== match.victorUser.id }">
+                            'danger' : match.opponentUser.id !== match.victorUser.id,
+                             'bold' : loggedInUser != null && match.opponentUser.id == loggedInUser.id  }">
                 {{match.opponentUser.name}}
             </td>
           </tr>
@@ -144,12 +151,14 @@
           <tr ng-repeat="match in matches">
             <td>{{match.matchTimestamp}}</td>
             <td ng-class="{ 'success' : match.creatorUser.id === match.victorUser.id,
-                            'danger' : match.creatorUser.id !== match.victorUser.id }">
+                            'danger' : match.creatorUser.id !== match.victorUser.id,
+                            'bold' : loggedInUser != null && match.creatorUser.id == loggedInUser.id}">
                 {{match.creatorUser.name}}
             </td>
             <td>{{match.creatorScore}} - {{match.opponentScore}}</td>
             <td ng-class="{ 'success' : match.opponentUser.id === match.victorUser.id,
-                            'danger' : match.opponentUser.id !== match.victorUser.id }">
+                            'danger' : match.opponentUser.id !== match.victorUser.id,
+                            'bold' : loggedInUser != null && match.opponentUser.id == loggedInUser.id }">
                 {{match.opponentUser.name}}
             </td>
           </tr>
@@ -163,7 +172,7 @@
 var app = angular.module('myApp', []);
 var testURL = "http://192.168.2.46:4567";
 var localURL = "http://localhost:4567";
-app.baseURI = localURL;
+app.baseURI = testURL;
 app.service('loginService', function ($rootScope) {
     this.loggedInUser = null;
 
