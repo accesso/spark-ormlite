@@ -238,7 +238,8 @@ public class MatchService
 					creatorRanking = rankingService.getUserRanking(m.getCreatorUser());
 					opponentRanking = ranking;
 				}
-				if (creatorRanking.getId() - 3 > opponentRanking.getId()) {
+				if (creatorRanking.getId() - 3 > opponentRanking.getId()
+					|| creatorRanking.getId() < opponentRanking.getId()) {
 					m.getCreatorUser().setRankId(creatorRanking.getId());
 					m.getOpponentUser().setRankId(opponentRanking.getId());
 					EmailService.sendChallengeRevokedEmails(m);

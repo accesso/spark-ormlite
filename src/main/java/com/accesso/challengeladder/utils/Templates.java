@@ -107,6 +107,7 @@ public class Templates
 			+ Constants.PING_PONG_LADDER_URL
 			+ "'>"
 			+ "accesso Ping Pong Ladder"
-			+ "</a>";
+			+ "</a>"
+			+ "</div>";
 	}
 }
