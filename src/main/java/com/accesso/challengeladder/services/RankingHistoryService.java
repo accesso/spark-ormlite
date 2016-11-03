@@ -12,23 +12,28 @@ import com.accesso.challengeladder.model.User;
 import com.accesso.challengeladder.utils.DBHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
-import com.j256.ormlite.support.ConnectionSource;
+import com.j256.ormlite.jdbc.JdbcConnectionSource;
 
 public class RankingHistoryService
 {
 
 	private static final Logger logger = Logger.getLogger(RankingHistoryService.class.getCanonicalName());
 
-	private ConnectionSource connectionSource;
+	private JdbcConnectionSource connectionSource;
 	private Dao<RankingHistory, String> rankingHistoryDao;
 	private Dao<User, String> userDao;
 	private Dao<Match, String> matchDao;
+
+	public JdbcConnectionSource getConnectionSource()
+	{
+		return connectionSource;
+	}
 
 	public RankingHistoryService() throws SQLException, IOException
 	{
 
 		DBHelper dBHelper = new DBHelper();
-		ConnectionSource connectionSource = dBHelper.getConnectionSource();
+		JdbcConnectionSource connectionSource = dBHelper.getConnectionSource();
 
 		this.connectionSource = connectionSource;
 		rankingHistoryDao = DaoManager.createDao(this.connectionSource, RankingHistory.class);
@@ -49,6 +54,7 @@ public class RankingHistoryService
 			rankingHistory.setRanking(ranking);
 			// creates a new rankingHistory in the DB
 			rankingHistoryDao.create(rankingHistory);
+			connectionSource.close();
 		}
 		catch (Exception e)
 		{
@@ -61,6 +67,7 @@ public class RankingHistoryService
 	public List<RankingHistory> getAll() throws SQLException
 	{
 		List<RankingHistory> rankingHistoryList = rankingHistoryDao.queryForAll();
+		connectionSource.closeQuietly();
 		return rankingHistoryList;
 	}
 }

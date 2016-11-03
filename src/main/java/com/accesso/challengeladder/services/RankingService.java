@@ -11,20 +11,25 @@ import com.accesso.challengeladder.model.User;
 import com.accesso.challengeladder.utils.DBHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
-import com.j256.ormlite.support.ConnectionSource;
+import com.j256.ormlite.jdbc.JdbcConnectionSource;
 
 public class RankingService
 {
 	private static final Logger logger = Logger.getLogger(RankingService.class.getCanonicalName());
 
-	private ConnectionSource connectionSource;
+	private JdbcConnectionSource connectionSource;
 	private Dao<Ranking, String> rankingDao;
 	private Dao<User, String> userDao;
+
+	public JdbcConnectionSource getConnectionSource()
+	{
+		return connectionSource;
+	}
 
 	public RankingService() throws SQLException, IOException
 	{
 		DBHelper dBHelper = new DBHelper();
-		ConnectionSource connectionSource = dBHelper.getConnectionSource();
+		JdbcConnectionSource connectionSource = dBHelper.getConnectionSource();
 
 		this.connectionSource = connectionSource;
 		rankingDao = DaoManager.createDao(this.connectionSource, Ranking.class);
@@ -39,6 +44,7 @@ public class RankingService
 			userDao.refresh(r.getUser());
 		}
 
+		connectionSource.closeQuietly();
 		return rankList;
 	}
 
@@ -74,6 +80,7 @@ public class RankingService
 
 			// creates a new user in the DB
 			rankingDao.create(r);
+			connectionSource.close();
 		}
 		catch (Exception e)
 		{
@@ -108,6 +115,7 @@ public class RankingService
 			RankingHistoryService rankingHistoryService = new RankingHistoryService();
 			rankingHistoryService.createRankingHistory(rankingUser1.getId(), rankingUser1.getUser().getId(), matchId);
 			rankingHistoryService.createRankingHistory(rankingUser2.getId(), rankingUser2.getUser().getId(), matchId);
+			rankingHistoryService.getConnectionSource().close();
 
 			return true;
 		}

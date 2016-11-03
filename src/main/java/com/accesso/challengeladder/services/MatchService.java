@@ -17,21 +17,26 @@ import com.accesso.challengeladder.utils.DBHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.stmt.QueryBuilder;
-import com.j256.ormlite.support.ConnectionSource;
+import com.j256.ormlite.jdbc.JdbcConnectionSource;
 
 public class MatchService
 {
-	private ConnectionSource connectionSource;
+	private JdbcConnectionSource connectionSource;
 	private Dao<Match, String> matchDao;
 	private Dao<User, String> userDao;
 	private Dao<MatchStatus, String> matchStatusDao;
 
 	private static final Logger logger = Logger.getLogger(MatchService.class.getCanonicalName());
 
+	public JdbcConnectionSource getConnectionSource()
+	{
+		return connectionSource;
+	}
+
 	public MatchService() throws SQLException, IOException
 	{
 		DBHelper dBHelper = new DBHelper();
-		ConnectionSource connectionSource = dBHelper.getConnectionSource();
+		JdbcConnectionSource connectionSource = dBHelper.getConnectionSource();
 
 		this.connectionSource = connectionSource;
 		matchDao = DaoManager.createDao(this.connectionSource, Match.class);
@@ -70,6 +75,8 @@ public class MatchService
 			newMatch.setMatchStatus(matchStatusDao.queryForId(Constants.MATCH_STATUS_PENDING));
 			matchDao.create(newMatch);
 			EmailService.sendChallengeCreatedEmails(newMatch);
+			connectionSource.close();
+			userService.getConnectionSource().close();
 		}
 		catch (IOException | SQLException e)
 		{
@@ -104,7 +111,6 @@ public class MatchService
 			RankingService rankingService = new RankingService();
 			userDao.refresh(match.getCreatorUser());
 			userDao.refresh(match.getOpponentUser());
-			userDao.refresh(match.getVictorUser());
 			Ranking creatorRanking = rankingService.getUserRanking(match.getCreatorUser());
 			Ranking opponentRanking = rankingService.getUserRanking(match.getOpponentUser());
 			match.getCreatorUser().setRankId(creatorRanking.getId());
@@ -113,18 +119,22 @@ public class MatchService
 			if (creatorScore > opponentScore)
 			{
 				match.setVictorUser(match.getCreatorUser());
+				userDao.refresh(match.getVictorUser());
 				EmailService.sendChallengeCompletedEmails(match);
 				rankingService.swapRankings(match.getCreatorUser(), match.getOpponentUser(), matchId);
 			}
 			else
 			{
-				EmailService.sendChallengeCompletedEmails(match);
 				match.setVictorUser(match.getOpponentUser());
+				userDao.refresh(match.getVictorUser());
+				EmailService.sendChallengeCompletedEmails(match);
 			}
 
 			matchDao.update(match);
-			deleteInvalidPendingMatchesByUser(match.getCreatorUser());
-			deleteInvalidPendingMatchesByUser(match.getOpponentUser());
+			deleteInvalidPendingMatchesByUser(rankingService, match.getCreatorUser());
+			deleteInvalidPendingMatchesByUser(rankingService, match.getOpponentUser());
+			rankingService.getConnectionSource().closeQuietly();
+			connectionSource.close();
 		}
 		catch (Exception e)
 		{
@@ -206,7 +216,7 @@ public class MatchService
 		return matchList;
 	}
 
-	public void deleteInvalidPendingMatchesByUser(User user) throws SQLException
+	public void deleteInvalidPendingMatchesByUser(RankingService rankingService, User user) throws SQLException
 	{
 		QueryBuilder<Match, String> matchQB = matchDao.queryBuilder();
 		matchQB.orderBy("match_timestamp", false);
@@ -220,7 +230,6 @@ public class MatchService
 
 		try
 		{
-			RankingService rankingService = new RankingService();
 			Ranking ranking = rankingService.getUserRanking(user);
 			for (Match m : matchList)
 			{
@@ -247,7 +256,7 @@ public class MatchService
 				}
 			}
 		}
-		catch (SQLException | IOException e)
+		catch (SQLException e)
 		{
 			logger.error(e);
 		}

@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import com.j256.ormlite.jdbc.JdbcConnectionSource;
-import com.j256.ormlite.support.ConnectionSource;
+import com.j256.ormlite.jdbc.JdbcPooledConnectionSource;
+import org.apache.log4j.Logger;
 
 public class DBHelper
 {
@@ -13,6 +13,8 @@ public class DBHelper
 	private String databaseUrl;
 	private String userDb;
 	private String passDb;
+
+	private static final Logger logger = Logger.getLogger(DBHelper.class.getCanonicalName());
 
 	public DBHelper() throws IOException
 	{
@@ -25,11 +27,14 @@ public class DBHelper
 		this.passDb = prop.getProperty("db.password");
 	}
 
-	public ConnectionSource getConnectionSource() throws SQLException
+	public JdbcPooledConnectionSource getConnectionSource() throws SQLException
 	{
-		ConnectionSource connectionSource = new JdbcConnectionSource(databaseUrl);
-		((JdbcConnectionSource) connectionSource).setUsername(userDb);
-		((JdbcConnectionSource) connectionSource).setPassword(passDb);
+		JdbcPooledConnectionSource connectionSource = new JdbcPooledConnectionSource(databaseUrl);
+		connectionSource.setUsername(userDb);
+		connectionSource.setPassword(passDb);
+		connectionSource.setMaxConnectionsFree(5);
+		connectionSource.setCheckConnectionsEveryMillis(5000);
+		connectionSource.setMaxConnectionAgeMillis(5000);
 
 		return connectionSource;
 	}

@@ -6,34 +6,35 @@ import com.accesso.challengeladder.model.User;
 import com.accesso.challengeladder.utils.DBHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
-import com.j256.ormlite.support.ConnectionSource;
+import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import org.apache.log4j.Logger;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class UserService
 {
 
 	private static final Logger logger = Logger.getLogger(UserService.class.getCanonicalName());
 
-	private ConnectionSource connectionSource;
+	private JdbcConnectionSource connectionSource;
 	private Dao<User, String> userDao;
 	private static String salt;
-	private Dao<Match, String> matchDao;
+
+	public JdbcConnectionSource getConnectionSource()
+	{
+		return connectionSource;
+	}
 
 	public UserService() throws SQLException, IOException
 	{
 		DBHelper dBHelper = new DBHelper();
-		ConnectionSource connectionSource = dBHelper.getConnectionSource();
+		JdbcConnectionSource connectionSource = dBHelper.getConnectionSource();
 
 		this.connectionSource = connectionSource;
 		userDao = DaoManager.createDao(this.connectionSource, User.class);
-		matchDao = DaoManager.createDao(this.connectionSource, Match.class);
 	}
 
 	public boolean addUser(User newUser)
@@ -48,6 +49,7 @@ public class UserService
 			newUser.setPassword(cryptWorker.hashpw("pingpong", salt));
 
 			userDao.create(newUser);
+			connectionSource.close();
 			return true;
 		}
 		catch (Exception e)
@@ -74,6 +76,7 @@ public class UserService
 			currentUser.setAdminFlag(updatedUser.getAdminFlag());
 			currentUser.setActiveFlag(updatedUser.getActiveFlag());
 			userDao.update(currentUser);
+			connectionSource.close();
 			return true;
 		}
 		catch (Exception e)
@@ -91,6 +94,7 @@ public class UserService
 			user = userDao.queryForId(userId);
 			user = populateUserWinsLosses(user);
 			user = populateUserRankId(user);
+			connectionSource.closeQuietly();
 		}
 
 		return user;
@@ -98,16 +102,13 @@ public class UserService
 
 	public User getUserByEmail(String email) throws SQLException
 	{
-		Map newMap = new HashMap();
-
-		newMap.put("email", email);
-
 		User user = null;
 		if (email != null)
 		{
 			List<User> results = userDao.queryForEq("email", email);
 			user = results.get(0);
 		}
+		DaoManager.unregisterDao(connectionSource, userDao);
 		return user;
 	}
 
@@ -140,6 +141,7 @@ public class UserService
 			user.setAdminFlag(null);
 			user.setEmail(null);
 		}
+		DaoManager.unregisterDao(connectionSource, userDao);
 		return userList;
 	}
 
@@ -180,12 +182,9 @@ public class UserService
 			user.setNumWins(numWins);
 			user.setNumLosses(numLosses);
 
+			matchService.getConnectionSource().close();
 		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-		catch (SQLException e)
+		catch (IOException | SQLException e)
 		{
 			e.printStackTrace();
 		}
@@ -210,12 +209,9 @@ public class UserService
 
 			user.setRankId(ranking.getId());
 
+			rankingService.getConnectionSource().close();
 		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-		catch (SQLException e)
+		catch (IOException | SQLException e)
 		{
 			e.printStackTrace();
 		}
