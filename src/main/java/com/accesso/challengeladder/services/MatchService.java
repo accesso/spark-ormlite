@@ -17,31 +17,22 @@ import com.accesso.challengeladder.utils.DBHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.stmt.QueryBuilder;
-import com.j256.ormlite.jdbc.JdbcConnectionSource;
 
 public class MatchService
 {
-	private JdbcConnectionSource connectionSource;
 	private Dao<Match, String> matchDao;
 	private Dao<User, String> userDao;
 	private Dao<MatchStatus, String> matchStatusDao;
 
 	private static final Logger logger = Logger.getLogger(MatchService.class.getCanonicalName());
 
-	public JdbcConnectionSource getConnectionSource()
-	{
-		return connectionSource;
-	}
-
 	public MatchService() throws SQLException, IOException
 	{
-		DBHelper dBHelper = new DBHelper();
-		JdbcConnectionSource connectionSource = dBHelper.getConnectionSource();
+		DBHelper dBHelper = DBHelper.getInstance();
 
-		this.connectionSource = connectionSource;
-		matchDao = DaoManager.createDao(this.connectionSource, Match.class);
-		userDao = DaoManager.createDao(this.connectionSource, User.class);
-		matchStatusDao = DaoManager.createDao(this.connectionSource, MatchStatus.class);
+		matchDao = DaoManager.createDao(dBHelper.getConnectionSource(), Match.class);
+		userDao = DaoManager.createDao(dBHelper.getConnectionSource(), User.class);
+		matchStatusDao = DaoManager.createDao(dBHelper.getConnectionSource(), MatchStatus.class);
 	}
 
 	public Match getMatch(String id)
@@ -75,8 +66,6 @@ public class MatchService
 			newMatch.setMatchStatus(matchStatusDao.queryForId(Constants.MATCH_STATUS_PENDING));
 			matchDao.create(newMatch);
 			EmailService.sendChallengeCreatedEmails(newMatch);
-			connectionSource.close();
-			userService.getConnectionSource().close();
 		}
 		catch (IOException | SQLException e)
 		{
@@ -133,8 +122,6 @@ public class MatchService
 			matchDao.update(match);
 			deleteInvalidPendingMatchesByUser(rankingService, match.getCreatorUser());
 			deleteInvalidPendingMatchesByUser(rankingService, match.getOpponentUser());
-			rankingService.getConnectionSource().closeQuietly();
-			connectionSource.close();
 		}
 		catch (Exception e)
 		{

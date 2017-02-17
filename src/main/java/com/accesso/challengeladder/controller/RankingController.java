@@ -24,7 +24,6 @@ public class RankingController
 
         get("/ranking/user/:id", (req, res) -> {
             Ranking ranking = rankingService.getUserRanking(req.params("id"));
-			rankingService.getConnectionSource().close();
             return JsonUtil.toJson(ranking);
         });
 

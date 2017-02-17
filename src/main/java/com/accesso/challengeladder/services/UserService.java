@@ -6,7 +6,6 @@ import com.accesso.challengeladder.model.User;
 import com.accesso.challengeladder.utils.DBHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
-import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import org.apache.log4j.Logger;
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -19,22 +18,14 @@ public class UserService
 
 	private static final Logger logger = Logger.getLogger(UserService.class.getCanonicalName());
 
-	private JdbcConnectionSource connectionSource;
 	private Dao<User, String> userDao;
 	private static String salt;
 
-	public JdbcConnectionSource getConnectionSource()
-	{
-		return connectionSource;
-	}
-
 	public UserService() throws SQLException, IOException
 	{
-		DBHelper dBHelper = new DBHelper();
-		JdbcConnectionSource connectionSource = dBHelper.getConnectionSource();
+		DBHelper dBHelper = DBHelper.getInstance();
 
-		this.connectionSource = connectionSource;
-		userDao = DaoManager.createDao(this.connectionSource, User.class);
+		userDao = DaoManager.createDao(dBHelper.getConnectionSource(), User.class);
 	}
 
 	public boolean addUser(User newUser)
@@ -49,7 +40,6 @@ public class UserService
 			newUser.setPassword(cryptWorker.hashpw("pingpong", salt));
 
 			userDao.create(newUser);
-			connectionSource.close();
 			return true;
 		}
 		catch (Exception e)
@@ -76,7 +66,6 @@ public class UserService
 			currentUser.setAdminFlag(updatedUser.getAdminFlag());
 			currentUser.setActiveFlag(updatedUser.getActiveFlag());
 			userDao.update(currentUser);
-			connectionSource.close();
 			return true;
 		}
 		catch (Exception e)
@@ -92,9 +81,8 @@ public class UserService
 		if (userId != null)
 		{
 			user = userDao.queryForId(userId);
-			user = populateUserWinsLosses(user);
-			user = populateUserRankId(user);
-			connectionSource.closeQuietly();
+			populateUserWinsLosses(user);
+			populateUserRankId(user);
 		}
 
 		return user;
@@ -108,7 +96,6 @@ public class UserService
 			List<User> results = userDao.queryForEq("email", email);
 			user = results.get(0);
 		}
-		DaoManager.unregisterDao(connectionSource, userDao);
 		return user;
 	}
 
@@ -141,7 +128,6 @@ public class UserService
 			user.setAdminFlag(null);
 			user.setEmail(null);
 		}
-		DaoManager.unregisterDao(connectionSource, userDao);
 		return userList;
 	}
 
@@ -181,8 +167,6 @@ public class UserService
 
 			user.setNumWins(numWins);
 			user.setNumLosses(numLosses);
-
-			matchService.getConnectionSource().close();
 		}
 		catch (IOException | SQLException e)
 		{
@@ -209,7 +193,6 @@ public class UserService
 
 			user.setRankId(ranking.getId());
 
-			rankingService.getConnectionSource().close();
 		}
 		catch (IOException | SQLException e)
 		{
