@@ -174,16 +174,27 @@ var app = angular.module('myApp', []);
 var testURL = "http://192.168.2.46:4567";
 var localURL = "http://localhost:4567";
 app.baseURI = testURL;
-app.service('loginService', function ($rootScope) {
-    this.loggedInUser = null;
+app.service('loginService', function ($rootScope, $window) {
+    self.loggedInUser = null;
+    var retrievedUser = $window.localStorage.getItem('accessoPingPongUser');
+    if (retrievedUser !== null && retrievedUser !== undefined)
+    {
+        self.loggedInUser = JSON.parse(retrievedUser);
+        $rootScope.$broadcast('LOGIN');
+    }
 
     return {
         getLoggedInUser: function() {
-            return this.loggedInUser;
+            return self.loggedInUser;
         },
         setLoggedInUser: function(value) {
-            this.loggedInUser = value;
+            self.loggedInUser = value;
             $rootScope.$broadcast('LOGIN');
+            if (self.loggedInUser !== null && retrievedUser !== undefined) {
+                $window.localStorage.setItem('accessoPingPongUser', JSON.stringify(this.loggedInUser));
+            } else {
+                $window.localStorage.removeItem('accessoPingPongUser');
+            }
         }
     };
 });
