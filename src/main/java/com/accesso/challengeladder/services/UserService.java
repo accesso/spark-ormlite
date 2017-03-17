@@ -1,38 +1,31 @@
 package com.accesso.challengeladder.services;
 
 import com.accesso.challengeladder.model.Match;
+import com.accesso.challengeladder.model.Ranking;
 import com.accesso.challengeladder.model.User;
 import com.accesso.challengeladder.utils.DBHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
-import com.j256.ormlite.support.ConnectionSource;
 import org.apache.log4j.Logger;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class UserService
 {
 
 	private static final Logger logger = Logger.getLogger(UserService.class.getCanonicalName());
 
-	private ConnectionSource connectionSource;
 	private Dao<User, String> userDao;
 	private static String salt;
-	private Dao<Match, String> matchDao;
 
 	public UserService() throws SQLException, IOException
 	{
-		DBHelper dBHelper = new DBHelper();
-		ConnectionSource connectionSource = dBHelper.getConnectionSource();
+		DBHelper dBHelper = DBHelper.getInstance();
 
-		this.connectionSource = connectionSource;
-		userDao = DaoManager.createDao(this.connectionSource, User.class);
-		matchDao = DaoManager.createDao(this.connectionSource, Match.class);
+		userDao = DaoManager.createDao(dBHelper.getConnectionSource(), User.class);
 	}
 
 	public boolean addUser(User newUser)
@@ -88,7 +81,8 @@ public class UserService
 		if (userId != null)
 		{
 			user = userDao.queryForId(userId);
-			user = populateUserWinsLosses(user);
+			populateUserWinsLosses(user);
+			populateUserRankId(user);
 		}
 
 		return user;
@@ -96,10 +90,6 @@ public class UserService
 
 	public User getUserByEmail(String email) throws SQLException
 	{
-		Map newMap = new HashMap();
-
-		newMap.put("email", email);
-
 		User user = null;
 		if (email != null)
 		{
@@ -177,13 +167,34 @@ public class UserService
 
 			user.setNumWins(numWins);
 			user.setNumLosses(numLosses);
-
 		}
-		catch (IOException e)
+		catch (IOException | SQLException e)
 		{
 			e.printStackTrace();
 		}
-		catch (SQLException e)
+		return user;
+	}
+
+	/**
+	 * Queries for the rank id and sets it on the User object
+	 *
+	 * @param user
+	 * @throws SQLException
+	 * @throws IOException
+	 */
+	public User populateUserRankId(User user)
+	{
+		RankingService rankingService;
+		try
+		{
+			rankingService = new RankingService();
+
+			Ranking ranking = rankingService.getUserRanking(user);
+
+			user.setRankId(ranking.getId());
+
+		}
+		catch (IOException | SQLException e)
 		{
 			e.printStackTrace();
 		}

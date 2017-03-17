@@ -2,6 +2,8 @@ package com.accesso.challengeladder.services;
 
 import java.io.IOException;
 
+import com.accesso.challengeladder.model.Match;
+import com.accesso.challengeladder.utils.Templates;
 import com.sendgrid.*;
 import org.apache.log4j.Logger;
 
@@ -9,19 +11,17 @@ public class EmailService
 {
 
     private static final Logger logger = Logger.getLogger(UserService.class.getCanonicalName());
-    private static final String api_key = "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";
-
-    public EmailService() throws IOException
-    {
-    }
+    private static final String API_KEY = "checkin_null";
+	private static final String SYSTEM_EMAIL_ADDRESS = "test@accesso.com";
+	private static final String SYSTEM_EMAIL_NAME = "accesso Ping Pong Ladder";
 
     public static boolean sendEmail(String subject, String toEmail, String message)
     {
-        Email from = new Email("tabletennis@accesso.com", "Accesso Table Tennis");
+        Email from = new Email(SYSTEM_EMAIL_ADDRESS, SYSTEM_EMAIL_NAME);
         Email to = new Email(toEmail);
-        Content content = new Content("text/plain", message);
+        Content content = new Content("text/html", message);
         Mail mail = new Mail(from, subject, to, content);
-        SendGrid sg = new SendGrid(api_key);
+        SendGrid sg = new SendGrid(API_KEY);
         Request request = new Request();
         try {
             request.method = Method.POST;
@@ -37,4 +37,50 @@ public class EmailService
             return false;
         }
     }
+
+	public static void sendChallengeCreatedEmails(Match match)
+	{
+		EmailService.sendEmail(
+			Templates.getChallengeCreatedSubject(match.getId()),
+			match.getCreatorUser().getEmail(),
+			Templates.getChallengeCreatedTemplate(match)
+		);
+		EmailService.sendEmail(
+			Templates.getChallengeCreatedSubject(match.getId()),
+			match.getOpponentUser().getEmail(),
+			Templates.getChallengeCreatedTemplate(match)
+		);
+
+	}
+
+	public static void sendChallengeRevokedEmails(Match match)
+	{
+		EmailService.sendEmail(
+			Templates.getChallengeRevokedSubject(match.getId()),
+			match.getCreatorUser().getEmail(),
+			Templates.getChallengeRevokedTemplate(match)
+		);
+		EmailService.sendEmail(
+			Templates.getChallengeRevokedSubject(match.getId()),
+			match.getOpponentUser().getEmail(),
+			Templates.getChallengeRevokedTemplate(match)
+		);
+
+	}
+
+	public static void sendChallengeCompletedEmails(Match match)
+	{
+		EmailService.sendEmail(
+			Templates.getChallengeCompletedSubject(match.getId()),
+			match.getCreatorUser().getEmail(),
+			Templates.getChallengeCompletedTemplate(match)
+		);
+		EmailService.sendEmail(
+			Templates.getChallengeCompletedSubject(match.getId()),
+			match.getOpponentUser().getEmail(),
+			Templates.getChallengeCompletedTemplate(match)
+		);
+
+	}
+
 }

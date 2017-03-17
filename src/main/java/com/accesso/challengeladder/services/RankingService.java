@@ -11,24 +11,20 @@ import com.accesso.challengeladder.model.User;
 import com.accesso.challengeladder.utils.DBHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
-import com.j256.ormlite.support.ConnectionSource;
 
 public class RankingService
 {
 	private static final Logger logger = Logger.getLogger(RankingService.class.getCanonicalName());
 
-	private ConnectionSource connectionSource;
 	private Dao<Ranking, String> rankingDao;
 	private Dao<User, String> userDao;
 
 	public RankingService() throws SQLException, IOException
 	{
-		DBHelper dBHelper = new DBHelper();
-		ConnectionSource connectionSource = dBHelper.getConnectionSource();
+		DBHelper dBHelper = DBHelper.getInstance();
 
-		this.connectionSource = connectionSource;
-		rankingDao = DaoManager.createDao(this.connectionSource, Ranking.class);
-		userDao = DaoManager.createDao(this.connectionSource, User.class);
+		rankingDao = DaoManager.createDao(dBHelper.getConnectionSource(), Ranking.class);
+		userDao = DaoManager.createDao(dBHelper.getConnectionSource(), User.class);
 	}
 
 	public List<Ranking> getRanking() throws SQLException
@@ -40,6 +36,29 @@ public class RankingService
 		}
 
 		return rankList;
+	}
+
+	public Ranking getUserRanking(String userId) throws SQLException
+	{
+		return getUserRanking(Integer.parseInt(userId));
+	}
+
+	public Ranking getUserRanking(User user) throws SQLException
+	{
+		return getUserRanking(user.getId());
+	}
+
+	public Ranking getUserRanking(int userId) throws SQLException
+	{
+		List<Ranking> userRankingList = rankingDao.queryForEq("user_id", userId);
+		if (userRankingList.size() > 0)
+		{
+			return userRankingList.get(0);
+		}
+		else
+		{
+			return new Ranking();
+		}
 	}
 
 	public Ranking createRanking(String userId) throws SQLException
