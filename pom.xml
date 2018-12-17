@@ -60,7 +60,7 @@
 		<dependency>
 			<groupId>com.sendgrid</groupId>
 			<artifactId>sendgrid-java</artifactId>
-			<version>3.0.7</version>
+			<version>3.2.2</version>
 		</dependency>
 
 		<dependency>
